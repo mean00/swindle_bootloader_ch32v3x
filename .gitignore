@@ -1,32 +1,30 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
+*.sw*
+.ccls*
+nbproject/*
+build/*
+build
+*.rej
+*.back
+*/bin
+build*
+*.bin
+.vscode
+pyUsb/__pycache__/
+pyUsb/*.csv
+bins
 *.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+updatedb.sh
+CMakeSettings.json
+*.hs
+.cache
+compile_commands.json
+updat*.*
+*.backup
+rs/lnbmp/target
+*.tmp
+tags
+kicad/ch32v3x/lnBMP_ch32/lnBMP_ch32-backups/
+*.new
+*.old
+*auto_save*
+*autosave*

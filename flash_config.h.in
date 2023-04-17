@@ -1,0 +1,4 @@
+#define FLASH_BASE_ADDR                 @APP_START@
+#define FLASH_SIZE_KB                   @LN_MCU_FLASH_SIZE@
+#define FLASH_BOOTLDR_SIZE_KB           @BOOTLOADER_SIZE@
+#define FLASH_BOOTLDR_PAYLOAD_SIZE_KB   @PAYLOAD_SIZE@
