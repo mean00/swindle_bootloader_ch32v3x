@@ -227,7 +227,7 @@ static const uint32_t vecTable[]  __attribute__((aligned(32)))=
     X(unsupported), //.word   DMA2_Channel11_IRQHandler  /* DMA2 Channel 11 */
  
 };
-
+#if 0 // MINIX
 // API used by the freeRTOS port
 extern "C"
 {
@@ -241,6 +241,7 @@ void NVIC_EnableIRQ(IRQn_Type IRQn)
     _enableDisable_direct(true, IRQn);    
 }
 }
+#endif
 /**
 
 */
@@ -447,14 +448,7 @@ WEAK_INTERRUPT(OTG_FS_IRQHandler)
 void lnSoftSystemReset()
 {
 }
-extern "C" int main();
-extern "C" void __libc_init_array(void);
-extern "C" void   __attribute__((noreturn))  start_c()
-{
-    __libc_init_array(); // call ctor before jumping in the code
-    main();
-    xAssert(0);  
-}
+
 
 // EOF
 

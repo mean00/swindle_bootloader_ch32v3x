@@ -7,6 +7,20 @@ MESSAGE(STATUS "======================")
 MESSAGE(STATUS "Starting lnBMP_bootloader ")
 MESSAGE(STATUS "======================")
 
+MACRO(POSTPROCESS target)
+add_custom_command(TARGET ${target}
+    POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${target}> $<TARGET_FILE:${target}>.bin
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Generating bin file"
+    )
+add_custom_command(TARGET ${target}
+    POST_BUILD
+    COMMAND ${CMAKE_SIZE} --format=berkeley $<TARGET_FILE:${target}>
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Memory summary"
+    )
+ENDMACRO(POSTPROCESS target)
 
 # Target CH32V303
 SET(USE_CH32v3x_USB_OTG True CACHE INTERNAL "")
@@ -47,14 +61,26 @@ ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000)
 SET(LNA ${MINI}/lnGPIO.cpp
         ${MINI}/start.S
         ${MINI}/lnRCU_ch32v3x.cpp        
+        ${MINI}/lnIRQ_riscv_ch32v3x.cpp        
         ${MINI}/lnSystemInit.cpp  
         ${MINI}/lnRCU.cpp  
+        ${MINI}/start.cpp  
+        ${MINI}/lnPinMapping.cpp  
+      
     )
-
-SET(SRCS src/main.cpp)
+    
+SET(SRCS 
+        src/main.cpp    
+        src/hash_check.cpp    
+        src/xxhash.c    
+        )
 
 ADD_EXECUTABLE(lnBMP_bootloader ${LNA} ${SRCS}  )
 TARGET_LINK_OPTIONS(lnBMP_bootloader  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
+#--
+POSTPROCESS( lnBMP_bootloader )
+#--
+
 #
 #
 #
