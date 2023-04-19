@@ -74,8 +74,9 @@ SET(SRCS
         src/hash_check.cpp    
         src/xxhash.c    
         )
-
+ADD_SUBDIRECTORY(tinyUsb)
 ADD_EXECUTABLE(lnBMP_bootloader ${LNA} ${SRCS}  )
+TARGET_LINK_LIBRARIES(lnBMP_bootloader tinyUsb)
 TARGET_LINK_OPTIONS(lnBMP_bootloader  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
 #--
 POSTPROCESS( lnBMP_bootloader )
