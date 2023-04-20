@@ -2,13 +2,14 @@
 
 #include "lnArduino.h"
 #include "lnGPIO.h"
-
+#include "lnCpuID.h"
 
 #define FORCE_DFU_IO PB2
 
-bool check_fw();
-
-
+extern bool check_fw();
+extern bool rebooted_into_dfu();
+extern void jumpIntoApp();
+extern void dfu();
 
 void lnRunTimeInit()
 {
@@ -33,34 +34,41 @@ extern "C" void vPortExitCritical()
     deadEnd(0);
 }
 /**
-
 */
-bool bootloader()
+bool check_forced_dfu()
 {
-   	int go_dfu=0;
-	//go_dfu = rebooted_into_dfu();
-	// Activate GPIO B for now
-	lnPeripherals::enable(pGPIOB);
-	lnPeripherals::enable(pGPIOC);
-	lnPeripherals::enable(pAF);
-	//lnExtiSWDOnly();
-
 	lnPinMode(FORCE_DFU_IO,    lnINPUT_PULLUP);
 	for(int i=0;i<10;i++) // wait  a bit
 		__asm__("nop");
 	if(!lnDigitalRead(FORCE_DFU_IO)) // "OK" Key pressed
-		go_dfu|=1; 
-	
-	//RCC_CSR |= RCC_CSR_RMVF; // Clear reset flag
+		return true;
+	return false;
+}
 
-	//lnCpuID::identify();
+/**
 
-	if(!go_dfu)
+*/
+bool bootloader()
+{
+
+	// Activate GPIO B for now
+	lnPeripherals::enable(pGPIOB);
+	lnPeripherals::enable(pGPIOC);
+	lnPeripherals::enable(pAF);
+
+
+   	int go_dfu=false;
+#define NEXT_STEP(x) {if(!go_dfu) go_dfu|=(int)x;}	
+	NEXT_STEP(rebooted_into_dfu);
+	NEXT_STEP(check_forced_dfu);
+	NEXT_STEP(!check_fw());
+
+	if(go_dfu==false)
 	{
-		go_dfu=!check_fw();
+		jumpIntoApp();
 	}
-	//clear_reboot_flags();
-    deadEnd(0);
+	lnCpuID::identify();
+	dfu();
     return false;
 }
 

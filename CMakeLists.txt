@@ -56,25 +56,36 @@ SET(LN_USB_NB_CDC 2) # 2 CDC interfaces
 SET(LN_USB_NB_HID 0) # No HID
 SET(LN_USB_DFU_RUNTIME 1 CACHE INTERNAL "")
 
-ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000)
+ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=96000000)
 
 SET(LNA ${MINI}/lnGPIO.cpp
         ${MINI}/start.S
-        ${MINI}/lnRCU_ch32v3x.cpp        
-        ${MINI}/lnIRQ_riscv_ch32v3x.cpp        
-        ${MINI}/lnSystemInit.cpp  
-        ${MINI}/lnRCU.cpp  
-        ${MINI}/start.cpp  
-        ${MINI}/lnPinMapping.cpp  
-      
+        ${MINI}/lnRCU_ch32v3x.cpp
+        ${MINI}/lnIRQ_riscv_ch32v3x.cpp
+        ${MINI}/lnSystemInit.cpp
+        ${MINI}/lnRCU.cpp
+        ${MINI}/start.cpp
+        ${MINI}/lnPinMapping.cpp
+        ${MINI}/lnCpuID_riscv_ch32v3x.cpp
+        ${MINI}/lnRCU_systemClock_riscv_ch32v3x.cpp 
     )
     
 SET(SRCS 
         src/main.cpp    
         src/hash_check.cpp    
-        src/xxhash.c    
+        src/xxhash.c
+        src/rebooted.cpp
+        src/dfu.cpp
         )
 ADD_SUBDIRECTORY(tinyUsb)
+
+SET(T ${CMAKE_SOURCE_DIR}/tinyUsb/src/src)
+
+include_directories( ${T}/src/device)
+include_directories( ${T}/src/)
+include_directories( ${T}/../)
+
+
 ADD_EXECUTABLE(lnBMP_bootloader ${LNA} ${SRCS}  )
 TARGET_LINK_LIBRARIES(lnBMP_bootloader tinyUsb)
 TARGET_LINK_OPTIONS(lnBMP_bootloader  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )

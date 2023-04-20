@@ -2,6 +2,10 @@
 #include "xxhash.h"
 #include "memory_config.h"
 
+/*
+    Check  fw is valid
+*/
+
 bool check_fw()
 {
     const uint32_t start_addr = 0x00000000 + (FLASH_BOOTLDR_SIZE_KB*1024);
@@ -30,3 +34,6 @@ bool check_fw()
     uint32_t computed=	XXH32 (&(base_addr[4]),imageSize,0x100);
     return (computed==checksum);
 }
+
+
+// EOF
