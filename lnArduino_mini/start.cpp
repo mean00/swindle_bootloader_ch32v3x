@@ -8,9 +8,8 @@ extern const char _data_lma;
 extern "C" int main();
 extern "C" void __libc_init_array(void);
 extern "C" void   __attribute__((noreturn))  start_c()
-{
-    uint32_t srcAdr= *(uint32_t *)(&_data_lma);
-    volatile uint32_t *src = (volatile uint32_t *)srcAdr;
+{    
+    volatile uint32_t *src = (volatile uint32_t *)&_data_lma;
     volatile uint32_t *dst = (volatile uint32_t*)&_data;
     volatile uint32_t *end = (volatile uint32_t*)&_edata;
 

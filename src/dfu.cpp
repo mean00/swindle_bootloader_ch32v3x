@@ -4,14 +4,41 @@
 #include "lnCpuID.h"
 #include "lnPeripherals.h"
 #include "usbd.h"
+
+/**
+*/
+extern void lnIrqSysInit();
+extern void _enableDisable_direct(bool enableDisable, const int &irq_num);
+
+#define SysTicK_IRQn 12
+
+void EnableIrqs()
+{
+      __asm__(
+            "csrrs x0, mstatus,x1 \t\n"
+            "ori x1,x1, 0x8 \t\n"
+            "csrrw x0, mstatus,x1 \t\n" 
+             ::  ) ;
+}
+
 /**
 */
 void dfu()
 {
     // switch to higher clock
     lnInitSystemClock();
+    // start systick & interrupt
+    lnIrqSysInit();
+
     // enable USB
     lnPeripherals::enable( Peripherals::pUSB);
+
+    // enable sysTick
+
+    _enableDisable_direct(true, SysTicK_IRQn);  
+
+    // enable interrupt globally
+    EnableIrqs();
 
     //board_init();
     tud_init(0);
@@ -55,9 +82,4 @@ extern "C" uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state)
 {
     deadEnd(0);
     return 0;
-}
-
-void xDelay(int a)
-{
-    deadEnd(0);
 }
