@@ -9,15 +9,16 @@
 */
 extern void lnIrqSysInit();
 extern void _enableDisable_direct(bool enableDisable, const int &irq_num);
+extern void setupSysTick();
 
 #define SysTicK_IRQn 12
 
 void EnableIrqs()
 {
       __asm__(
-            "csrrs x0, mstatus,x1 \t\n"
-            "ori x1,x1, 0x8 \t\n"
-            "csrrw x0, mstatus,x1 \t\n" 
+            "csrr   x1, mstatus \t\n"
+            "ori    x1 , x1, 0x8 \t\n"
+            "csrw   mstatus ,x1 \t\n" 
              ::  ) ;
 }
 
@@ -27,14 +28,17 @@ void dfu()
 {
     // switch to higher clock
     lnInitSystemClock();
-    // start systick & interrupt
+
+    // sys tick
+    setupSysTick();
+    
+    // setup interrupts
     lnIrqSysInit();
 
     // enable USB
-    lnPeripherals::enable( Peripherals::pUSB);
+    lnPeripherals::enable( Peripherals::pUSBFS_OTG_CH32v3x);
 
     // enable sysTick
-
     _enableDisable_direct(true, SysTicK_IRQn);  
 
     // enable interrupt globally
