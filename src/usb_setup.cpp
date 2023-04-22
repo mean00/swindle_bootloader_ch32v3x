@@ -99,10 +99,13 @@ char const* string_desc_arr [] =
   "lnBMP",                     // 1: Manufacturer
   "lnBMP DFU",              // 2: Product
   "123456",                      // 3: Serials, should use chip ID
-  "lnBMP_FW",                       // 4: DFU Partition 1  
+  "@Internal Flash /0x00000000/8*001Ka,244*001Kg"
+    //"lnBMP_FW",                       // 4: DFU Partition 1  
 };
 
-static uint16_t _desc_str[32];
+#define MAX_REPLY_SIZE 64
+
+static uint16_t _desc_str[MAX_REPLY_SIZE];
 
 // Invoked when received GET STRING DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
@@ -128,8 +131,8 @@ extern "C" uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t lang
 
     // Cap at max char
     chr_count = (uint8_t) strlen(str);
-    if ( chr_count > 31 ) {
-      chr_count = 31;
+    if ( chr_count > MAX_REPLY_SIZE ) {
+      chr_count = MAX_REPLY_SIZE;
     }
 
     // Convert ASCII string into UTF-16

@@ -65,6 +65,5 @@ extern "C" void tud_dfu_manifest_cb(uint8_t alt)
 
 extern "C" uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state)
 {
-    deadEnd(0);
-    return 0;
+   return 10; // ??
 }

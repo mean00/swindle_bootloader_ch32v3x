@@ -44,7 +44,21 @@ bool check_forced_dfu()
 		return true;
 	return false;
 }
+/**
+ *
+ * @return
+ */
 
+void resetMe(const Peripherals periph)
+{
+    lnPeripherals::reset(periph);
+    lnPeripherals::enable(periph);
+
+}
+void disabled(const Peripherals periph)
+{
+    lnPeripherals::disable(periph);
+}
 /**
 
 */
@@ -56,6 +70,13 @@ bool bootloader()
 	lnPeripherals::enable(pGPIOC);
 	lnPeripherals::enable(pAF);
 
+  // The LEDs are all on GPIO A
+    resetMe(pGPIOA);
+    resetMe(pGPIOB);
+    resetMe(pGPIOC);
+
+    // We need alternate functions too
+    resetMe(pAF);
 
    	int go_dfu=false;
 #define NEXT_STEP(x) {if(!go_dfu) go_dfu|=(int)x;}	
