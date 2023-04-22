@@ -4,6 +4,7 @@
 #include "lnCpuID.h"
 #include "lnPeripherals.h"
 #include "usbd.h"
+#include "class/dfu/dfu_device.h"
 
 /**
 */
@@ -51,17 +52,27 @@ void dfu()
 }
 
 
-
-
+#define DFU_STATUS_OK 0
+/*
+    Perform flashing...
+*/
 extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const *data, uint16_t length)
 {
-    deadEnd(0);
+    tud_dfu_finish_flashing(DFU_STATUS_OK);
 }
-
+/*
+    Called AFTER the flashing has been done
+*/
 extern "C" void tud_dfu_manifest_cb(uint8_t alt)
 {
-    deadEnd(0);
+    // nothing to do..
 }
+
+extern "C" void tud_dfu_detach_cb(void)
+{
+    // do reset 
+}
+
 
 extern "C" uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state)
 {
