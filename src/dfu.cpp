@@ -34,6 +34,9 @@ void dfu()
     
     // setup interrupts
     lnIrqSysInit();
+    
+    // enable 48 Mhz
+    lnPeripherals::enableUsb48Mhz();
 
     // enable USB
     lnPeripherals::enable( Peripherals::pUSBFS_OTG_CH32v3x);
@@ -54,23 +57,8 @@ void dfu()
     deadEnd(0);
 }
 
-extern "C" const uint8_t  *tud_descriptor_device_cb()
-{
-    deadEnd(0);       
-    return NULL;
-}
 
-extern "C" const uint8_t *tud_descriptor_configuration_cb(uint8_t index)
-{
-    deadEnd(0);
-    return NULL;
-}
 
-extern "C" const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t lan)
-{
-    deadEnd(0);
-    return NULL;
-}
 
 extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const *data, uint16_t length)
 {

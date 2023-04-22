@@ -79,6 +79,7 @@ SET(SRCS
         src/rebooted.cpp
         src/dfu.cpp
         src/interrupt.cpp
+        src/usb_setup.cpp
         )
 ADD_SUBDIRECTORY(tinyUsb)
 

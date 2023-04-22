@@ -18,10 +18,6 @@ typedef struct
 #define SysTick         ((SysTick_Type *) 0xE000F000)
 
 
-void   LN_INTERRUPT_TYPE OTG_FS_IRQHandler(void)
-{
-    xAssert(0);
-}
 /**
 */
 volatile int sysTick=0;
