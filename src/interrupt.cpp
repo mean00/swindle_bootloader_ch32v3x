@@ -28,6 +28,15 @@ extern "C" void   LN_INTERRUPT_TYPE SysTick_Handler(void)
 
 }
 
+void EnableIrqs()
+{
+      __asm__(
+            "csrr   t1, mstatus \t\n"
+            "ori    t1 , t1, 0x8 \t\n"
+            "csrw   mstatus ,t1 \t\n" 
+             ::  ) ;
+}
+
 void setupSysTick()
 {
     // setup sys tick

@@ -37,10 +37,18 @@ SET(MINI ${CMAKE_SOURCE_DIR}/lnArduino_mini)
 
 include(./mcuSelect.cmake)
 # Update paths
-SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_riscv_ch32v3x_clang.cmake)
+IF(USE_CLANG)
+    SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_riscv_ch32v3x_clang.cmake)
+    configure_file( "${MINI}/clang.lld.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
+ELSE(USE_CLANG)
+    SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_riscv_ch32v3x.cmake)
+    configure_file( "${MINI}/ld.lds.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
+ENDIF(USE_CLANG)
+
+
 #set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${AF_FOLDER}/cmake CACHE INTERNAL "")
 
-configure_file( "${MINI}/clang.lld.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
+
 
 PROJECT(lnBMP_bootloader NONE) # the NONE is very important !
 
@@ -57,7 +65,7 @@ SET(LN_USB_NB_HID 0) # No HID
 SET(LN_USB_DFU_RUNTIME 1 CACHE INTERNAL "")
 
 ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=96000000)
-ADD_DEFINITIONS(-O0 -g3)
+#ADD_DEFINITIONS(-O0 -g3)
 
 SET(LNA ${MINI}/lnGPIO.cpp
         ${MINI}/start.S

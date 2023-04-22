@@ -35,8 +35,8 @@ tusb_desc_device_t const desc_device =
 
     .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
 
-    .idVendor           = 0xCafe,
-    .idProduct          = USB_PID,
+    .idVendor           = 0x1d50,
+    .idProduct          = 0x6030,
     .bcdDevice          = 0x0100,
 
     .iManufacturer      = 0x01,
@@ -58,7 +58,7 @@ extern "C" uint8_t const * tud_descriptor_device_cb(void)
 //--------------------------------------------------------------------+
 
 // Number of Alternate Interface (each for 1 flash partition)
-#define ALT_COUNT   2
+#define ALT_COUNT   1
 
 enum
 {
@@ -68,7 +68,7 @@ enum
 
 #define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + TUD_DFU_DESC_LEN(ALT_COUNT))
 
-#define FUNC_ATTRS (DFU_ATTR_CAN_UPLOAD | DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_MANIFESTATION_TOLERANT)
+#define FUNC_ATTRS (  DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_MANIFESTATION_TOLERANT)
 
 uint8_t const desc_configuration[] =
 {
@@ -97,9 +97,9 @@ char const* string_desc_arr [] =
 {
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
   "lnBMP",                     // 1: Manufacturer
-  "lnBMP probe",              // 2: Product
+  "lnBMP DFU",              // 2: Product
   "123456",                      // 3: Serials, should use chip ID
-  "FLASH",                       // 4: DFU Partition 1  
+  "lnBMP_FW",                       // 4: DFU Partition 1  
 };
 
 static uint16_t _desc_str[32];

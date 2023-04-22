@@ -10,17 +10,10 @@
 extern void lnIrqSysInit();
 extern void _enableDisable_direct(bool enableDisable, const int &irq_num);
 extern void setupSysTick();
+extern void EnableIrqs();
 
 #define SysTicK_IRQn 12
 
-void EnableIrqs()
-{
-      __asm__(
-            "csrr   x1, mstatus \t\n"
-            "ori    x1 , x1, 0x8 \t\n"
-            "csrw   mstatus ,x1 \t\n" 
-             ::  ) ;
-}
 
 /**
 */
