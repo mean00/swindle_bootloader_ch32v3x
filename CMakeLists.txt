@@ -60,8 +60,8 @@ include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 
-ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=96000000)
-#ADD_DEFINITIONS(-O0 -g3)
+ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=48000000)
+ADD_DEFINITIONS(-O0 -g3)
 
 SET(LNA ${MINI}/lnGPIO.cpp
         ${MINI}/start.S
@@ -70,6 +70,8 @@ SET(LNA ${MINI}/lnGPIO.cpp
         ${MINI}/lnSystemInit.cpp
         ${MINI}/lnRCU.cpp
         ${MINI}/start.cpp
+        ${MINI}/lnSerial.cpp
+        ${MINI}/lnFMC.cpp
         ${MINI}/lnPinMapping.cpp
         ${MINI}/lnCpuID_riscv_ch32v3x.cpp
         ${MINI}/lnRCU_systemClock_riscv_ch32v3x.cpp 
@@ -84,6 +86,7 @@ SET(SRCS
         src/dfu.cpp
         src/interrupt.cpp
         src/usb_setup.cpp
+        
         )
 ADD_SUBDIRECTORY(tinyUsb)
 
