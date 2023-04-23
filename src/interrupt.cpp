@@ -69,3 +69,8 @@ void delayMicroseconds(int us)
     int ms=1+(us/1000);
     xDelay(ms);
 }
+
+uint32_t lnGetMs()
+{
+    return sysTick;
+}

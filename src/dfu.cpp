@@ -6,6 +6,13 @@
 #include "usbd.h"
 #include "class/dfu/dfu_device.h"
 #include "lnFMC.h"
+/**
+
+*/
+#define LED  PC13
+#define LED2 PA8
+
+#define NO_FLASH
 
 /**
 */
@@ -21,8 +28,12 @@ extern void uartSend(const char *c);
 
 bool flashErase(uint32_t adr);
 bool flashWrite(uint32_t adr, const uint8_t *data, int size);
+uint32_t lnGetMs();
 
 uint32_t target_address;
+
+bool led=false;
+uint32_t rendezvous;
 
 /**
 */
@@ -47,6 +58,9 @@ void dfu()
 
     // enable sysTick
     _enableDisable_direct(true, SysTicK_IRQn);  
+    //
+    lnPinMode(LED, lnOUTPUT);
+    lnPinMode(LED2, lnOUTPUT);
 
     //
     uartInit();
@@ -54,6 +68,7 @@ void dfu()
     // enable interrupt globally
     EnableIrqs();
 
+#if 0
     uint32_t adr=220*1024+0x4000;
     flashErase(adr);
     uint8_t data[256];
@@ -63,13 +78,22 @@ void dfu()
     {
         __asm__("nop");
     }
+#endif    
 
 
     //board_init();
     tud_init(0);
+    rendezvous=lnGetMs()+200;
     while (1)
     {
         tud_task(); // tinyusb device task
+        if(lnGetMs()>rendezvous)
+        {
+            rendezvous+=200;
+            lnDigitalWrite(LED,led);
+            lnDigitalWrite(LED2,led);
+            led=!led;
+        }
        // led_blinking_task();
     }
     deadEnd(0);
@@ -84,8 +108,11 @@ bool flashErase(uint32_t adr)
         return false;
     }
     uartSend("page erase\n");
+#ifdef NO_FLASH    
+    return true;
+#else    
     return lnFMC::eraseCh32v3(adr,1);
-    
+#endif    
 }
 /**
 */
@@ -97,7 +124,11 @@ bool flashWrite(uint32_t adr, const uint8_t *data, int size)
         return false;
     }
     uartSend("page write\n");
-    return lnFMC::writeCH32V3(adr, data, size);    
+#ifdef NO_FLASH    
+    return true;
+#else
+    return lnFMC::writeCH32V3(adr, data, size);
+#endif    
 }
 
 /*
@@ -128,6 +159,7 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
                     {
                         uartSend("setAdr\n");
                         target_address=address;
+                        //return;
                         break;
                     }
                     break;
@@ -160,6 +192,6 @@ extern "C" void tud_dfu_detach_cb(void)
 
 extern "C" uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state)
 {
-   return 10; // ??
+   return 0; // ??
 }
 
