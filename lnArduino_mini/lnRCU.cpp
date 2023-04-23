@@ -29,7 +29,7 @@ static const RCU_Peripheral mini_peripherals[]=
     {        pGPIOB,         2,          LN_RCU_APB2_PBEN},
     {        pGPIOC,         2,          LN_RCU_APB2_PCEN},
     {        pAF,            2,          LN_RCU_APB2_AFEN},
-    {        pUSBFS_OTG_CH32v3x, 8,      LN_RCU_AHB_USBFSEN_OTG_CH32V3x},
+    {        pUSBFS_OTG_CH32v3x, 8,      LN_RCU_AHB_USBFSEN_OTG_CH32V3x},    
 };
 const RCU_Peripheral *getPeriph(int p)
 {

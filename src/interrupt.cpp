@@ -27,7 +27,14 @@ extern "C" void   LN_INTERRUPT_TYPE SysTick_Handler(void)
     SysTick->SR=0;
 
 }
+void     noInterrupts()
+{
 
+}
+void     interrupts()
+{
+    
+}
 void EnableIrqs()
 {
       __asm__(
@@ -55,4 +62,10 @@ void xDelay(int a)
     {
         __asm__("nop");
     }
+}
+
+void delayMicroseconds(int us)
+{
+    int ms=1+(us/1000);
+    xDelay(ms);
 }
