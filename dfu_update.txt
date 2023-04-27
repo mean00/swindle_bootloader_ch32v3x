@@ -1,2 +1,2 @@
-sudo  dfu-util -d 1d50:6030,1d50:6030  -s 0x00004000:leave -D  lnBMP_BL_CH32V3x.elf.bin
+sudo  /home/fx/.local/bin/dfu-util  -v -d 1d50:6030,1d50:6030  -s 0x00004000:leave -D  lnBMP_BL_CH32V3x.elf.bin
 

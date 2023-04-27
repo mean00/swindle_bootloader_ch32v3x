@@ -43,6 +43,20 @@ void uartSend(const char *c)
     c++;
   }
 }
+extern "C" void uartSend_C(const char *c)
+{
+  LN_USART_Registers *d=usart0;
+  while(*c)
+  {
+    
+    while(!(d->STAT & LN_USART_STAT_TBE))
+    {
+        __asm__("nop");
+    }
+    d->DATA=*c;
+    c++;
+  }
+}
 
 
 // EOF

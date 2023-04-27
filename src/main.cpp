@@ -80,8 +80,8 @@ bool bootloader()
 
    	int go_dfu=false;
 #define NEXT_STEP(x) {if(!go_dfu) go_dfu|=(int)x;}	
-	NEXT_STEP(rebooted_into_dfu);
-	NEXT_STEP(check_forced_dfu);
+	NEXT_STEP(rebooted_into_dfu());
+	NEXT_STEP(check_forced_dfu());
 	NEXT_STEP(!check_fw());
 
 	if(go_dfu==false)

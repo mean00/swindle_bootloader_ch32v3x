@@ -67,20 +67,7 @@ void dfu()
     uartSend("Going DFU\n");
     // enable interrupt globally
     EnableIrqs();
-
-#if 0
-    uint32_t adr=220*1024+0x4000;
-    flashErase(adr);
-    uint8_t data[256];
-    for(int i=0;i<256;i++) data [i] = i;
-    flashWrite(adr,data,256);
-    while(1)
-    {
-        __asm__("nop");
-    }
-#endif    
-
-
+    
     //board_init();
     tud_init(0);
     rendezvous=lnGetMs()+200;
@@ -165,14 +152,42 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
                     break;
                     default:
                         uartSend("CMD Err\n");
+                        er=DFU_STATUS_ERR_UNKNOWN;
                         break;
                 }
             }
             break;
         case 1 : uartSend("Block1 CB\n");break;
-        default: uartSend("other block CB\n");break;
+        default: 
+                uartSend("other block CB\n");
+                uint32_t adr=target_address+(block_num-2)*CFG_TUD_DFU_XFER_BUFSIZE;
+                if(!flashWrite(adr,data,length))
+                {
+                    uartSend("Flash Err\n");
+                    er=DFU_STATUS_ERR_WRITE;
+                }        
+                break;
     }
     tud_dfu_finish_flashing(er);
+}
+/**
+*/
+
+extern "C" void tud_dfu_detach_cb(void)
+{
+    uartSend("Detach CB\n");
+    // do reset 
+    // CH32V2x and CH32V3x reset the system by
+    // setting the SYSRESET bit in the interrupt configuration register (PFIC_CFGR) to 1, or by setting the
+    // SYSRESET bit in the PFIC_SCTLR
+    
+    volatile uint32_t *pfic_sctlr=(volatile uint32_t *)0xE000ED10;
+    *pfic_sctlr=(1<<31);
+    while(1)
+    {
+        __asm__("nop");
+    }
+    
 }
 /*
     Called AFTER the flashing has been done
@@ -181,17 +196,11 @@ extern "C" void tud_dfu_manifest_cb(uint8_t alt)
 {
     uartSend("Manifest CB\n");
     // nothing to do..
+    tud_dfu_detach_cb();
 }
-
-extern "C" void tud_dfu_detach_cb(void)
-{
-    uartSend("Detach CB\n");
-    // do reset 
-}
-
 
 extern "C" uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state)
 {
-   return 0; // ??
+   return 10; // ??
 }
 

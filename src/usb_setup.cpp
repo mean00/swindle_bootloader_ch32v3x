@@ -1,6 +1,7 @@
 
 #include "tusb.h"
 #include "class/dfu/dfu_device.h"
+#include "memory_config.h"
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
  * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
@@ -99,7 +100,7 @@ char const* string_desc_arr [] =
   "lnBMP",                     // 1: Manufacturer
   "lnBMP DFU",              // 2: Product
   "123456",                      // 3: Serials, should use chip ID
-  "@Internal Flash /0x00000000/8*001Ka,244*001Kg"
+  FLASH_DFU_STRING,
     //"lnBMP_FW",                       // 4: DFU Partition 1  
 };
 

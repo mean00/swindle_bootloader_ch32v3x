@@ -1,4 +1,5 @@
 #include "lnArduino.h"
+#include "memory_config.h"
 
 // Points to the bottom of the stack, we should have 8 bytes free there
 extern uint32_t __msp_init;
@@ -25,5 +26,6 @@ bool rebooted_into_dfu() {
 */
 void jumpIntoApp()
 {
-    deadEnd(0);
+#define JUMP 	"j 0x4000" // FIXME!
+    __asm__(JUMP ::);
 }

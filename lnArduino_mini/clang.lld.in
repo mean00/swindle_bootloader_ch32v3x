@@ -24,13 +24,8 @@ MEMORY
   ram (rwx) :       ORIGIN = 0x20000000, LENGTH = @LN_MCU_RAM_SIZE@K
   rom (rx):  ORIGIN = 0x00000000, LENGTH = @LN_BOOTLOADER_SIZE@K
   
-  e2prom (rx)  :    ORIGIN = 0x00000000+@LN_MCU_FLASH_SIZE@K-@LN_MCU_EEPROM_SIZE@K, LENGTH = @LN_MCU_EEPROM_SIZE@K
+  
 }
-/**
-    we allocate 4 kB at the end for the eeprom
-*/
-PROVIDE(eeprom_size = LENGTH(e2prom));
-PROVIDE(eeprom_begin = ORIGIN(e2prom));
 /*
  * Linker script for libmaple.
  *
@@ -41,7 +36,7 @@ REGION_ALIAS("REGION_TEXT", rom);
 REGION_ALIAS("REGION_DATA", ram);
 REGION_ALIAS("REGION_BSS", ram);
 REGION_ALIAS("REGION_RODATA", rom);
-REGION_ALIAS("REGION_EEPROM", e2prom);
+
 
 
 /*
@@ -168,12 +163,6 @@ SECTIONS
             PROVIDE( _edata= .); /* mark copy section start in ram */
             PROVIDE( edata= .); /* mark copy section start in ram */
           } > REGION_DATA AT> REGION_RODATA
-    	/*
-    .eeprom eeprom_begin :
-      {
-        . = ALIGN(4); 
-      } > REGION_EEPROM
-      */
 
     /*
      * .bss

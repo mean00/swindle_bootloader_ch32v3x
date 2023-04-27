@@ -11,15 +11,10 @@ bool check_fw()
     const uint32_t start_addr = 0x00000000 + (FLASH_BOOTLDR_SIZE_KB*1024);
 	const uint32_t * const base_addr = (uint32_t*)start_addr;
 	
-	uint32_t sig= base_addr[0];
-	uint32_t imageSize = base_addr[6];
-	uint32_t checksum=	base_addr[7];	
 	
-    if((sig >>20) != 0x200) // this does not look at a ram address
-    {
-        return false; 
-    }
-
+	uint32_t imageSize = base_addr[1];
+	uint32_t checksum=	base_addr[2];	
+	
      // Check hash of app is correct
     if(imageSize>256*1024)
     {
