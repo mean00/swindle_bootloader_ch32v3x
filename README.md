@@ -31,5 +31,8 @@ Edit platformConfig to point for your toolchain.
 
 The one i use is a recent version of clang/riscv32 with picolibc.
 
+Using
+------
 
-
+```
+dfu-util -d 1d50:6030  -s 0x0004000:leave -D binaryfile
