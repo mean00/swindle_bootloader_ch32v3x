@@ -3,14 +3,17 @@ OUTPUT_ARCH( "riscv" )
 ENTRY( _start )
 MEMORY
 {
-  ram (rwx) :       ORIGIN = 0x20000000, LENGTH = @LN_MCU_RAM_SIZE@K
+  ram (rwx) :       ORIGIN = 0x20000008, LENGTH = @LN_MCU_RAM_SIZE@K
   rom (rx)  :       ORIGIN = 0x00000000, LENGTH = @LN_MCU_FLASH_SIZE@K-@LN_MCU_EEPROM_SIZE@K
-  
+  e2prom (rx)  :    ORIGIN = 0x00000000+@LN_MCU_FLASH_SIZE@K-@LN_MCU_EEPROM_SIZE@K, LENGTH = @LN_MCU_EEPROM_SIZE@K
 }
 
 /**
     we allocate 4 kB at the end for the eeprom
 */
+PROVIDE(eeprom_size = LENGTH(e2prom));
+PROVIDE(eeprom_begin = ORIGIN(e2prom));
+REGION_ALIAS("REGION_EEPROM", e2prom);
 
 
 SECTIONS
@@ -117,7 +120,7 @@ SECTIONS
     . = ALIGN(4);
     PROVIDE( _data_lma = . );
   } >rom AT>rom 
-
+ 
   .dalign         :
   {
     . = ALIGN(4);
@@ -127,6 +130,8 @@ SECTIONS
   
   .data          :
   {
+    LONG(0) /* Marker */
+    LONG(0)
     *(.rdata) 
    
     *(.gnu.linkonce.r.*)
@@ -171,5 +176,9 @@ SECTIONS
     PROVIDE( _sp = . ); 
   } >ram AT>ram 
 
- 
+  .eeprom eeprom_begin :
+      {
+        . = eeprom_size;
+      } > REGION_EEPROM AT > REGION_EEPROM
+
 }

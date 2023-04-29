@@ -12,7 +12,7 @@
 #define LED  PC13
 #define LED2 PA8
 
-#define NO_FLASH
+//#define NO_FLASH
 
 /**
 */
@@ -20,6 +20,7 @@ extern void lnIrqSysInit();
 extern void _enableDisable_direct(bool enableDisable, const int &irq_num);
 extern void setupSysTick();
 extern void EnableIrqs();
+extern void systemReset();
 
 #define SysTicK_IRQn 12
 
@@ -180,13 +181,7 @@ extern "C" void tud_dfu_detach_cb(void)
     // CH32V2x and CH32V3x reset the system by
     // setting the SYSRESET bit in the interrupt configuration register (PFIC_CFGR) to 1, or by setting the
     // SYSRESET bit in the PFIC_SCTLR
-    
-    volatile uint32_t *pfic_sctlr=(volatile uint32_t *)0xE000ED10;
-    *pfic_sctlr=(1<<31);
-    while(1)
-    {
-        __asm__("nop");
-    }
+    systemReset();
     
 }
 /*

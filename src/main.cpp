@@ -81,9 +81,17 @@ bool bootloader()
    	int go_dfu=false;
 #define NEXT_STEP(x) {if(!go_dfu) go_dfu|=(int)x;}	
 	NEXT_STEP(rebooted_into_dfu());
-	NEXT_STEP(check_forced_dfu());
-	NEXT_STEP(!check_fw());
-
+	//NEXT_STEP(check_forced_dfu());
+	if(!go_dfu)
+	{
+		int fw_ko=0;
+		if(!check_fw())
+		{
+			fw_ko=1;
+		} 
+		go_dfu|=fw_ko;
+	}
+	
 	if(go_dfu==false)
 	{
 		jumpIntoApp();

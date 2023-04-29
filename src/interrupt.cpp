@@ -43,6 +43,17 @@ void EnableIrqs()
             "csrw   mstatus ,t1 \t\n" 
              ::  ) ;
 }
+void DisableIrqs()
+{
+      __asm__(
+            "li     t1,0xffffffff\t\n"
+            "li     t2,0x8\t\n"
+            "xor    t2 , t1, t2 \t\n"
+            "csrr   t1, mstatus \t\n"            
+            "and    t1 , t1, t2 \t\n"
+            "csrw   mstatus ,t1 \t\n" 
+             ::  ) ;
+}
 
 void setupSysTick()
 {
@@ -73,4 +84,14 @@ void delayMicroseconds(int us)
 uint32_t lnGetMs()
 {
     return sysTick;
+}
+
+void systemReset()
+{
+   volatile uint32_t *pfic_sctlr=(volatile uint32_t *)0xE000ED10;
+    *pfic_sctlr=(1<<31);
+    while(1)
+    {
+        __asm__("nop");
+    }
 }

@@ -13,6 +13,10 @@
 	.align	1
 	.extern start_c
 _start:
+/*
+	lui t0, 0x4
+	jalr x0,0(t0)
+	*/
 	j	handle_reset
 	.align  1
 _vector_base:

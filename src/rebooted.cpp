@@ -24,8 +24,12 @@ bool rebooted_into_dfu() {
 
 /**
 */
+extern void DisableIrqs();
 void jumpIntoApp()
 {
-#define JUMP 	"j 0x4000" // FIXME!
+// there must be a simpler way...
+		DisableIrqs();
+#define JUMP 	"lui t0, 0x4\t\n" \
+				"jalr x0,0(t0)\n"
     __asm__(JUMP ::);
 }
