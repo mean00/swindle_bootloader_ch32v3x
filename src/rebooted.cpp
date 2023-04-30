@@ -22,6 +22,11 @@ bool rebooted_into_dfu() {
 	return (*marker == 0xDEADBEEFCC00FFEEULL);
 }
 
+void clearRebootedIntoDfu()
+{
+	*marker=0;
+}
+
 /**
 */
 extern void DisableIrqs();

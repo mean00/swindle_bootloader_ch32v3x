@@ -10,6 +10,7 @@ extern bool check_fw();
 extern bool rebooted_into_dfu();
 extern void jumpIntoApp();
 extern void dfu();
+extern void clearRebootedIntoDfu();
 
 void lnRunTimeInit()
 {
@@ -91,7 +92,7 @@ bool bootloader()
 		} 
 		go_dfu|=fw_ko;
 	}
-	
+	clearRebootedIntoDfu();
 	if(go_dfu==false)
 	{
 		jumpIntoApp();
