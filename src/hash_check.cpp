@@ -26,7 +26,7 @@ bool check_fw()
         return true; // un hashed default value, we accept them
     }
 
-    uint32_t computed=	XXH32 (&(base_addr[4]),imageSize,0x100);
+    uint32_t computed=	XXH32 (&(base_addr[3]),imageSize,0x100);
     return (computed==checksum);
 }
 
