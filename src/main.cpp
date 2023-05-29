@@ -3,8 +3,7 @@
 #include "lnArduino.h"
 #include "lnGPIO.h"
 #include "lnCpuID.h"
-
-#define FORCE_DFU_IO PB2
+#include "pinout.h"
 
 extern bool check_fw();
 extern bool rebooted_into_dfu();
@@ -38,10 +37,10 @@ extern "C" void vPortExitCritical()
 */
 bool check_forced_dfu()
 {
-	lnPinMode(FORCE_DFU_IO,    lnINPUT_PULLUP);
+	lnPinMode(FORCED_DFU_PIN,    lnINPUT_PULLUP);
 	for(int i=0;i<10;i++) // wait  a bit
 		__asm__("nop");
-	if(!lnDigitalRead(FORCE_DFU_IO)) // "OK" Key pressed
+	if(!lnDigitalRead(FORCED_DFU_PIN)) // "OK" Key pressed
 		return true;
 	return false;
 }
@@ -82,7 +81,7 @@ bool bootloader()
    	int go_dfu=false;
 #define NEXT_STEP(x) {if(!go_dfu) go_dfu|=(int)x;}	
 	NEXT_STEP(rebooted_into_dfu());
-	//NEXT_STEP(check_forced_dfu());
+	NEXT_STEP(check_forced_dfu());
 	if(!go_dfu)
 	{
 		int fw_ko=0;

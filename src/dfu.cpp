@@ -6,11 +6,10 @@
 #include "usbd.h"
 #include "class/dfu/dfu_device.h"
 #include "lnFMC.h"
+#include "pinout.h"
 /**
 
 */
-#define LED  PC13
-#define LED2 PA8
 
 //#define NO_FLASH
 

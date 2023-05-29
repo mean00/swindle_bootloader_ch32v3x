@@ -1,6 +1,6 @@
 #include "lnArduino.h"
 #include "memory_config.h"
-
+#include "pinout.h"
 // Points to the bottom of the stack, we should have 8 bytes free there
 extern uint32_t __msp_init;
 uint64_t *marker=(uint64_t *)0x0000000020000000 ; // marker is at the beginning
@@ -32,6 +32,11 @@ void clearRebootedIntoDfu()
 extern void DisableIrqs();
 void jumpIntoApp()
 {
+// Switch on the LEDS before jumping
+	lnPinMode(LED, lnOUTPUT);
+	lnPinMode(LED2, lnOUTPUT);
+	lnDigitalWrite(LED,0);
+	lnDigitalWrite(LED2,0);	
 // there must be a simpler way...
 		DisableIrqs();
 #define JUMP 	"lui t0, 0x4\t\n" \
