@@ -24,7 +24,8 @@ extern void systemReset();
 #define SysTicK_IRQn 12
 
 extern void uartInit();
-extern void uartSend(const char *c);
+extern void printC(const char *c);
+extern void printCHex(const char *c, uint32_t val_in_hex);
 
 bool flashErase(uint32_t adr);
 bool flashWrite(uint32_t adr, const uint8_t *data, int size);
@@ -64,7 +65,7 @@ void dfu()
 
     //
     uartInit();
-    uartSend("Going DFU\n");
+    printC("Going DFU\n");
     // enable interrupt globally
     EnableIrqs();
     
@@ -91,10 +92,10 @@ bool flashErase(uint32_t adr)
 {
     if(adr<8*1024) // dont write the bootloader
     {
-        uartSend("Dont erase the BL!\n");
+        printC("Dont erase the BL!\n");
         return false;
     }
-    uartSend("page erase\n");
+    printCHex("erase",adr);
 #ifdef NO_FLASH    
     return true;
 #else    
@@ -107,14 +108,32 @@ bool flashWrite(uint32_t adr, const uint8_t *data, int size)
 {
     if(adr<8*1024) // dont write the bootloader
     {
-        uartSend("Dont write the BL!\n");
+        printC("Dont write the BL!\n");
         return false;
     }
-    uartSend("page write\n");
+    printCHex("wr",adr);
 #ifdef NO_FLASH    
     return true;
 #else
-    return lnFMC::writeCH32V3(adr, data, size);
+    if(!lnFMC::writeCH32V3(adr, data, size))
+    {
+        printCHex("write failed\n",adr);
+        return false;
+    }
+    uint8_t *p=(uint8_t *)adr;
+    bool correct=true;
+    for(int i=0;i<size;i++)
+    {
+        if(data[i]!=p[i])
+        {
+            correct=false;
+            printCHex("write verify failed at adr\n",adr+i);
+            printCHex(" expected", p[i]);
+            printCHex(" got ", data[i]);
+            printC("\n");
+        }
+    }
+    return correct;
 #endif    
 }
 
@@ -130,7 +149,7 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
             {
                 if(length<5)
                 {
-                    uartSend("Incorrect len\n");
+                    printC("Incorrect len\n");
                     er=DFU_STATUS_ERR_UNKNOWN;
                     break;
                 }
@@ -144,26 +163,26 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
                     }
                     case 0x21: // set address
                     {
-                        uartSend("setAdr\n");
+                        printC("setAdr\n");
                         target_address=address;
                         //return;
                         break;
                     }
                     break;
                     default:
-                        uartSend("CMD Err\n");
+                        printC("CMD Err\n");
                         er=DFU_STATUS_ERR_UNKNOWN;
                         break;
                 }
             }
             break;
-        case 1 : uartSend("Block1 CB\n");break;
+        case 1 : printC("Block1 CB\n");break;
         default: 
-                uartSend("other block CB\n");
+                printC("other CB\n");
                 uint32_t adr=target_address+(block_num-2)*CFG_TUD_DFU_XFER_BUFSIZE;
                 if(!flashWrite(adr,data,length))
                 {
-                    uartSend("Flash Err\n");
+                    printC("Flash Err\n");
                     er=DFU_STATUS_ERR_WRITE;
                 }        
                 break;
@@ -175,7 +194,7 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
 
 extern "C" void tud_dfu_detach_cb(void)
 {
-    uartSend("Detach CB\n");
+    printC("Detach CB\n");
     // do reset 
     // CH32V2x and CH32V3x reset the system by
     // setting the SYSRESET bit in the interrupt configuration register (PFIC_CFGR) to 1, or by setting the
@@ -188,7 +207,7 @@ extern "C" void tud_dfu_detach_cb(void)
 */
 extern "C" void tud_dfu_manifest_cb(uint8_t alt)
 {
-    uartSend("Manifest CB\n");
+    printC("Manifest CB\n");
     // nothing to do..
     tud_dfu_detach_cb();
 }

@@ -29,6 +29,15 @@ void uartInit()
     d->CTL0|=LN_USART_CTL0_UEN; 
 }
 
+void uartPutChar(const char c)
+{
+  LN_USART_Registers *d=usart0;
+    while(!(d->STAT & LN_USART_STAT_TBE))
+    {
+        __asm__("nop");
+    }
+    d->DATA=c;      
+}
 void uartSend(const char *c)
 {
   LN_USART_Registers *d=usart0;

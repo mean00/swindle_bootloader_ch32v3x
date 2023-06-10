@@ -90,6 +90,7 @@ SET(SRCS
         src/dfu.cpp
         src/interrupt.cpp
         src/usb_setup.cpp
+        src/logger.cpp
         
         )
 ADD_SUBDIRECTORY(tinyUsb)
