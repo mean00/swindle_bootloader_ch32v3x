@@ -150,6 +150,12 @@ math(EXPR MCU_SPEED_M "${LN_MCU_SPEED}/1000000")
 MESSAGE(STATUS "Built for ${LN_ARCH}/${LN_MCU} with ${LN_MCU_FLASH_SIZE} flash / ${LN_MCU_RAM_SIZE} ram")
 MESSAGE(STATUS "          MCU running at ${MCU_SPEED_M} Mhz")
 
-set_target_properties(lnBMP_bootloader PROPERTIES OUTPUT_NAME lnBMP_BL_${LN_MCU} )
+IF(USE_CLANG)
+    SET(COMPILER "CLANG" CACHE INTERNAL "")
+ELSE()    
+    SET(COMPILER "GCC" CACHE INTERNAL "")
+ENDIF()    
+
+set_target_properties(lnBMP_bootloader PROPERTIES OUTPUT_NAME lnBMP_BL_${LN_MCU}_${COMPILER} )
 
 
