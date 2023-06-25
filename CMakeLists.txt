@@ -31,6 +31,9 @@ ENDMACRO(POSTPROCESS target)
 # Target CH32V303
 SET(USE_CH32v3x_USB_OTG True CACHE INTERNAL "")
 SET(USE_CH32V3x        True CACHE INTERNAL "")
+SET(LN_ENABLE_USBD  True CACHE INTERNAL "")
+SET(LN_ENABLE_I2C   FALSE CACHE INTERNAL "")
+SET(LN_ENABLE_SPI   FALSE CACHE INTERNAL "")
 
 IF(DEBUG_BUILD)
 ELSE()
@@ -38,9 +41,7 @@ ELSE()
     SET(LN_LTO "-flto"  CACHE INTERNAL "")
 ENDIF()
 
-SET(LN_ENABLE_USBD  True CACHE INTERNAL "")
-SET(LN_ENABLE_I2C   FALSE CACHE INTERNAL "")
-SET(LN_ENABLE_SPI   FALSE CACHE INTERNAL "")
+
 
 SET(MINI ${CMAKE_SOURCE_DIR}/lnArduino_mini)
 
@@ -55,17 +56,17 @@ ELSE(USE_CLANG)
 ENDIF(USE_CLANG)
 
 
-#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${AF_FOLDER}/cmake CACHE INTERNAL "")
-
-
 
 PROJECT(lnBMP_bootloader NONE) # the NONE is very important !
+enable_language(C CXX ASM) # this is important too!
 
 IF(DEBUG_BUILD)
     ADD_DEFINITIONS("-O0 -g3 -DDEBUG_BUILD")
+    SET(TAG "_DEBUG" CACHE INTERNAL "")
     include_directories(embedded_printf)
+ELSE()
+    ADD_DEFINITIONS("-Oz")
 ENDIF(DEBUG_BUILD)
-enable_language(C CXX ASM) # this is important too!
 #
 include_directories( ${MINI} )
 include_directories( ${MINI}/include )
@@ -74,11 +75,6 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 
 ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=48000000)
-IF(False)
-    ADD_DEFINITIONS(-O1 -g3)
-ELSE()    
-    ADD_DEFINITIONS(-Oz)
-ENDIF()
 
 SET(LNA ${MINI}/lnGPIO.cpp
         ${MINI}/start.S
@@ -105,15 +101,9 @@ SET(SRCS
         src/usb_setup.cpp
         )
 IF(DEBUG_BUILD)
-    SET(EXTRA 
-            src/logger_debug.cpp
-            embedded_printf/printf.c
-        )
+    SET(EXTRA             src/logger_debug.cpp            embedded_printf/printf.c        )
 ELSE()
-    SET(EXTRA 
-        src/logger.cpp
-    )
-
+    SET(EXTRA         src/logger.cpp    )
 ENDIF()        
 
 
@@ -125,14 +115,11 @@ include_directories( ${T}/src/device)
 include_directories( ${T}/src/)
 include_directories( ${T}/../)
 
-
 ADD_EXECUTABLE(lnBMP_bootloader ${LNA} ${SRCS} ${EXTRA} )
 TARGET_LINK_LIBRARIES(lnBMP_bootloader tinyUsb)
 TARGET_LINK_OPTIONS(lnBMP_bootloader  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
 #--
 POSTPROCESS( lnBMP_bootloader )
-#--
-
 #
 #
 #
@@ -152,10 +139,17 @@ MESSAGE(STATUS "          MCU running at ${MCU_SPEED_M} Mhz")
 
 IF(USE_CLANG)
     SET(COMPILER "CLANG" CACHE INTERNAL "")
+    MESSAGE(STATUS "          Compiler : CLANG")
 ELSE()    
     SET(COMPILER "GCC" CACHE INTERNAL "")
+    MESSAGE(STATUS "          Compiler : GCC")
 ENDIF()    
 
-set_target_properties(lnBMP_bootloader PROPERTIES OUTPUT_NAME lnBMP_BL_${LN_MCU}_${COMPILER} )
+IF(DEBUG_BUILD)
+    MESSAGE(STATUS "          DEBUG BUILD")
+ENDIF()
 
 
+set_target_properties(lnBMP_bootloader PROPERTIES OUTPUT_NAME lnBMP_BL_${LN_MCU}_${COMPILER}${TAG} )
+
+#
