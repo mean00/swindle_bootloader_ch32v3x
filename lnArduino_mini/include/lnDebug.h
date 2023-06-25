@@ -7,9 +7,9 @@
 
 #define Logger Logger_C
 
-    void LoggerInit();    
-    extern "C" void Logger(const char *fmt...);
-    extern "C" void Logger_C(const char *fmt,...);
-    extern "C" void Logger_chars(int n, const char *data);    
+void LoggerInit();
+extern "C" void Logger(const char *fmt...);
+extern "C" void Logger_C(const char *fmt, ...);
+extern "C" void Logger_chars(int n, const char *data);
 
 // EOF

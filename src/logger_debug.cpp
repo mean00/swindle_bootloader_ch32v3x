@@ -1,6 +1,6 @@
 #include "lnArduino.h"
-
 #include "printf.h"
+#include "stdarg.h"
 static char buffer[256];
 
 void uartSend(const char *c);
