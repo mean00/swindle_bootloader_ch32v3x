@@ -1,8 +1,8 @@
 
 
 #include "lnArduino.h"
-#include "lnGPIO.h"
 #include "lnCpuID.h"
+#include "lnGPIO.h"
 #include "pinout.h"
 
 extern bool check_fw();
@@ -13,12 +13,11 @@ extern void clearRebootedIntoDfu();
 
 void lnRunTimeInit()
 {
-
 }
 
-extern "C" void __attribute__ ((noinline))  xdeadEnd(int code)
+extern "C" void __attribute__((noinline)) xdeadEnd(int code)
 {
-    while(1)
+    while (1)
     {
         __asm__("nop");
     }
@@ -34,15 +33,15 @@ extern "C" void vPortExitCritical()
     deadEnd(0);
 }
 /**
-*/
+ */
 bool check_forced_dfu()
 {
-	lnPinMode(FORCED_DFU_PIN,    lnINPUT_PULLUP);
-	for(int i=0;i<10;i++) // wait  a bit
-		__asm__("nop");
-	if(!lnDigitalRead(FORCED_DFU_PIN)) // "OK" Key pressed
-		return true;
-	return false;
+    lnPinMode(FORCED_DFU_PIN, lnINPUT_PULLUP);
+    for (int i = 0; i < 10; i++) // wait  a bit
+        __asm__("nop");
+    if (!lnDigitalRead(FORCED_DFU_PIN)) // "OK" Key pressed
+        return true;
+    return false;
 }
 /**
  *
@@ -53,7 +52,6 @@ void resetMe(const Peripherals periph)
 {
     lnPeripherals::reset(periph);
     lnPeripherals::enable(periph);
-
 }
 void disabled(const Peripherals periph)
 {
@@ -65,12 +63,12 @@ void disabled(const Peripherals periph)
 bool bootloader()
 {
 
-	// Activate GPIO B for now
-	lnPeripherals::enable(pGPIOB);
-	lnPeripherals::enable(pGPIOC);
-	lnPeripherals::enable(pAF);
+    // Activate GPIO B for now
+    lnPeripherals::enable(pGPIOB);
+    lnPeripherals::enable(pGPIOC);
+    lnPeripherals::enable(pAF);
 
-  // The LEDs are all on GPIO A
+    // The LEDs are all on GPIO A
     resetMe(pGPIOA);
     resetMe(pGPIOB);
     resetMe(pGPIOC);
@@ -78,26 +76,30 @@ bool bootloader()
     // We need alternate functions too
     resetMe(pAF);
 
-   	int go_dfu=false;
-#define NEXT_STEP(x) {if(!go_dfu) go_dfu|=(int)x;}	
-	NEXT_STEP(rebooted_into_dfu());
-	NEXT_STEP(check_forced_dfu());
-	if(!go_dfu)
-	{
-		int fw_ko=0;
-		if(!check_fw())
-		{
-			fw_ko=1;
-		} 
-		go_dfu|=fw_ko;
-	}
-	clearRebootedIntoDfu();
-	if(go_dfu==false)
-	{
-		jumpIntoApp();
-	}
-	lnCpuID::identify();
-	dfu();
+    int go_dfu = false;
+#define NEXT_STEP(x)                                                                                                   \
+    {                                                                                                                  \
+        if (!go_dfu)                                                                                                   \
+            go_dfu |= (int)x;                                                                                          \
+    }
+    NEXT_STEP(rebooted_into_dfu());
+    NEXT_STEP(check_forced_dfu());
+    if (!go_dfu)
+    {
+        int fw_ko = 0;
+        if (!check_fw())
+        {
+            fw_ko = 1;
+        }
+        go_dfu |= fw_ko;
+    }
+    clearRebootedIntoDfu();
+    if (go_dfu == false)
+    {
+        jumpIntoApp();
+    }
+    lnCpuID::identify();
+    dfu();
     return false;
 }
 
