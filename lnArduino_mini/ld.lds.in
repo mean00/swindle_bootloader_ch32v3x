@@ -168,13 +168,7 @@ SECTIONS
   . = ALIGN(8);
   PROVIDE( _end = . ); /*0X2000,0340*/
   PROVIDE( end = . );
-
-  .stack ORIGIN(ram) + LENGTH(ram) - __stack_size :
-  {
-    PROVIDE( _heap_end = . ); 
-    . = __stack_size;  
-    PROVIDE( _sp = . ); 
-  } >ram AT>ram 
+  PROVIDE( _sp = ORIGIN(ram) + LENGTH(ram) - __stack_size);
 
   .eeprom eeprom_begin :
       {

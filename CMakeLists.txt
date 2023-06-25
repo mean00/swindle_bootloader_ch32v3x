@@ -7,6 +7,12 @@ MESSAGE(STATUS "======================")
 MESSAGE(STATUS "Starting lnBMP_bootloader ")
 MESSAGE(STATUS "======================")
 
+OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
+
+
+#SET(DEBUG_BUILD ON CACHE INTERNAL "")
+
+
 MACRO(POSTPROCESS target)
 add_custom_command(TARGET ${target}
     POST_BUILD
@@ -26,8 +32,11 @@ ENDMACRO(POSTPROCESS target)
 SET(USE_CH32v3x_USB_OTG True CACHE INTERNAL "")
 SET(USE_CH32V3x        True CACHE INTERNAL "")
 
-SET(USE_CLANG       TRUE CACHE INTERNAL "")
-#SET(LN_LTO "-flto"  CACHE INTERNAL "")
+IF(DEBUG_BUILD)
+ELSE()
+    SET(USE_CLANG       TRUE CACHE INTERNAL "")
+    SET(LN_LTO "-flto"  CACHE INTERNAL "")
+ENDIF()
 
 SET(LN_ENABLE_USBD  True CACHE INTERNAL "")
 SET(LN_ENABLE_I2C   FALSE CACHE INTERNAL "")
@@ -52,6 +61,10 @@ ENDIF(USE_CLANG)
 
 PROJECT(lnBMP_bootloader NONE) # the NONE is very important !
 
+IF(DEBUG_BUILD)
+    ADD_DEFINITIONS("-O0 -g3 -DDEBUG_BUILD")
+    include_directories(embedded_printf)
+ENDIF(DEBUG_BUILD)
 enable_language(C CXX ASM) # this is important too!
 #
 include_directories( ${MINI} )
@@ -90,9 +103,20 @@ SET(SRCS
         src/dfu.cpp
         src/interrupt.cpp
         src/usb_setup.cpp
-        src/logger.cpp
-        
         )
+IF(DEBUG_BUILD)
+    SET(EXTRA 
+            src/logger_debug.cpp
+            embedded_printf/printf.c
+        )
+ELSE()
+    SET(EXTRA 
+        src/logger.cpp
+    )
+
+ENDIF()        
+
+
 ADD_SUBDIRECTORY(tinyUsb)
 
 SET(T ${CMAKE_SOURCE_DIR}/tinyUsb/src/src)
@@ -102,7 +126,7 @@ include_directories( ${T}/src/)
 include_directories( ${T}/../)
 
 
-ADD_EXECUTABLE(lnBMP_bootloader ${LNA} ${SRCS}  )
+ADD_EXECUTABLE(lnBMP_bootloader ${LNA} ${SRCS} ${EXTRA} )
 TARGET_LINK_LIBRARIES(lnBMP_bootloader tinyUsb)
 TARGET_LINK_OPTIONS(lnBMP_bootloader  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
 #--

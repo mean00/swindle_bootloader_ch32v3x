@@ -22,7 +22,6 @@ int main()
 {
     // move stack to the end of ucheap
     uint32_t stack=(uint32_t)(&ucHeap[configTOTAL_HEAP_SIZE-4]) & (~3);
-
     asm volatile(                       
                     "mv sp, %0\n"
                   :: "r"(stack)

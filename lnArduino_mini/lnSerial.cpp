@@ -9,7 +9,9 @@
 #include "lnPeripheral_priv.h"
 
 #define usart0 ((LN_USART_Registers *)LN_USART0_ADR)
- 
+
+char _ctype_b[10];
+
 void uartInit()
 {
     LN_USART_Registers *d=usart0;  

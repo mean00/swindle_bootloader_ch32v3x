@@ -1,14 +1,25 @@
 #include "lnArduino.h"
 
 
+#include "printf.h"
+static char buffer[256];
+
+
 
 void uartSend(const char *c);
 extern "C" void uartSend_C(const char *c);
 void uartPutChar(const char c);
-extern "C" void Logger_C(const char *c,...)
+extern "C" void Logger_C(const char *fmt,...)
 {
-    uartSend_C(c);
+    va_list va;
+    va_start(va, fmt);
+    vsnprintf_(buffer, 127, fmt, va);
+
+    buffer[255] = 0;
+    va_end(va);
+    uartSend_C(buffer);  
 }
+
 /**
 */
 void printC(const char *c)
