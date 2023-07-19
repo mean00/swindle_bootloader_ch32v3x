@@ -111,6 +111,7 @@ bool lnFMC::eraseCh32v3(const uint32_t startAddress, int sizeInKBytes)
     xAssert(!(adr & ((1 << 10) - 1)));
     autoNoInterrupt noInt;
     CH32_fastUnlock();
+    adr += 0x08000000; // some leftover from older chip it seems
     // Erase each page
     for (int i = 0; i < sizeInKBytes * 4; i++)
     {
