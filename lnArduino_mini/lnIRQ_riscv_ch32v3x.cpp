@@ -250,6 +250,7 @@ void lnDisableInterrupt(const LnIRQ &irq)
 
 extern "C" void __attribute__((noinline)) deadEnd(int code)
 {
+    __asm__("ebreak");
     // No interrrupt
     ENTER_CRITICAL();
     while (1)
