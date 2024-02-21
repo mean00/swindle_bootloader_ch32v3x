@@ -38,7 +38,7 @@ SET(LN_ENABLE_SPI   FALSE CACHE INTERNAL "")
 IF(DEBUG_BUILD)
 ELSE()
     SET(USE_CLANG       TRUE CACHE INTERNAL "")
-    SET(LN_LTO "-flto"  CACHE INTERNAL "")
+    #SET(LN_LTO "-flto"  CACHE INTERNAL "")
 ENDIF()
 
 
@@ -99,6 +99,7 @@ SET(SRCS
         src/dfu.cpp
         src/interrupt.cpp
         src/usb_setup.cpp
+        src/stubs.cpp
         )
 IF(DEBUG_BUILD)
     SET(EXTRA             src/logger_debug.cpp            embedded_printf/printf.c        )
