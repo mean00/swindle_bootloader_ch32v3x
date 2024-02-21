@@ -82,7 +82,7 @@ SET(LNA ${MINI}/lnGPIO.cpp
         ${MINI}/lnIRQ_riscv_ch32v3x.cpp
         ${MINI}/lnSystemInit.cpp
         ${MINI}/lnRCU.cpp
-        ${MINI}/start.cpp
+        #${MINI}/start.cpp
         ${MINI}/lnSerial.cpp
         ${MINI}/lnFMC.cpp
         ${MINI}/lnPinMapping.cpp
