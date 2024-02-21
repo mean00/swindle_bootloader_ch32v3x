@@ -15,8 +15,9 @@ include_directories( ${TUSB}/class/device/dfu)
 
 
 SET(CH32V3x_FOLDER      ${CMAKE_CURRENT_SOURCE_DIR}/ch32v3x/)
-
-SET(DRIVERS             ${CH32V3x_FOLDER}/dcd_usbfs.c  ${CH32V3x_FOLDER}/dcd_usbfs_platform.cpp    )
+SET(VER old)
+SET(DRIVERS             ${CH32V3x_FOLDER}/${VER}/dcd_ch32_usbfs.c  ${CH32V3x_FOLDER}/${VER}/dcd_usbfs_platform.cpp    )
+#SET(DRIVERS             ${CH32V3x_FOLDER}/dcd_usbfs.c  ${CH32V3x_FOLDER}/dcd_usbfs_platform.cpp    )
 SET(LN_OPT_TUSB_MCU     OPT_MCU_CH32V307)
 INCLUDE_DIRECTORIES(    ${CH32V3x_FOLDER}  )       
 SET(LN_OPT_MODE         OPT_MODE_FULL_SPEED)              

@@ -4,38 +4,36 @@
  */
 #pragma once
 #include "lnArduino.h"
-#define PPINS(a, val)                                                                                                  \
-    P##a##0 = val, P##a##1, P##a##2, P##a##3, P##a##4, P##a##5, P##a##6, P##a##7, P##a##8, P##a##9, P##a##10,          \
-    P##a##11, P##a##12, P##a##13, P##a##14, P##a##15,
+
 /**
  */
-enum lnPin
-{
-    PPINS(A, 0) PPINS(B, 16) PPINS(C, 32) PPINS(D, 48) PPINS(E, 64) NoPin = -1
-};
-
+#include "lnGPIO_pins.h"
 /**
  */
 enum lnGpioMode
 {
     lnFLOATING = 0,
-    lnINPUT_FLOATING = 0,
+    lnINPUT_FLOATING = 1,
     lnINPUT_PULLUP = 2,
     lnINPUT_PULLDOWN = 3,
-    lnOUTPUT = 1,
-    lnOUTPUT_OPEN_DRAIN = 4,
+    lnOUTPUT = 4,
+    lnOUTPUT_OPEN_DRAIN = 5,
     lnALTERNATE_PP,
     lnALTERNATE_OD,
     lnPWM,
     lnADC_MODE,
-    lnDAC_MODE
+    lnDAC_MODE,
+    lnUART,
+    lnSPI,
 };
 #define GpioMode lnGpioMode
 // typedef int lnPin;
-void lnPinMode(const lnPin pin, const lnGpioMode mode);
+void lnPinMode(const lnPin pin, const lnGpioMode mode, const int speedInMhz = 0);
 void lnDigitalWrite(const lnPin pin, bool value);
 bool lnDigitalRead(const lnPin pin);
 void lnDigitalToggle(const lnPin pin);
+void lnOpenDrainClose(const lnPin pin, const bool close); // if true, the open drain is passing, else it is hiz
+
 volatile uint32_t *lnGetGpioToggleRegister(int port); // Bop register for port "port" with port A:0, B:1, ...
 volatile uint32_t *lnGetGpioDirectionRegister(
     int port); // Direction register for the bit 0..7 of port "port" , A=0, B=1, ...
@@ -52,28 +50,28 @@ class lnFastIO
 {
   public:
     lnFastIO(lnPin p);
-    void on()
+    void on() volatile
     {
         *_onoff = _onbit;
     }
-    void off()
+    void off() volatile
     {
         *_onoff = _offbit;
     }
-    void pulseLow() __attribute__((always_inline))
+    void pulseLow() volatile __attribute__((always_inline))
     {
         *_onoff = _offbit;
         *_onoff = _onbit;
     }
-    void pulseHigh() __attribute__((always_inline))
+    void pulseHigh() volatile __attribute__((always_inline))
     {
         *_onoff = _onbit;
         *_onoff = _offbit;
     }
 
   protected:
-    uint32_t *_onoff;
-    uint32_t _onbit, _offbit;
+    volatile uint32_t *_onoff;
+    volatile uint32_t _onbit, _offbit;
 };
 
 #include "lnExti.h"

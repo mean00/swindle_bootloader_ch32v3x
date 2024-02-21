@@ -3,6 +3,7 @@
  *  See license file
  */
 #pragma once
+#include "lnArduino.h"
 /**
  *
  * \brief If you do a dma transfer
@@ -61,6 +62,8 @@ class lnDMA
     void invokeCallback();
     void pause();
     void resume();
+    void enableInterrupt();
+    void disableInterrupt();
 
   protected:
     uint32_t _dma;
@@ -73,6 +76,7 @@ class lnDMA
     void *_cookie;
     uint32_t _control;
     uint32_t _priority;
+    uint32_t _interruptMask;
 
     int _sourceWidth, _targetWidth;
 };

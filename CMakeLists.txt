@@ -8,7 +8,7 @@ MESSAGE(STATUS "Starting lnBMP_bootloader (ch32)")
 MESSAGE(STATUS "================================")
 
 OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
-
+include(./build_default.cmake)
 
 #SET(DEBUG_BUILD ON CACHE INTERNAL "")
 
@@ -29,16 +29,17 @@ add_custom_command(TARGET ${target}
 ENDMACRO(POSTPROCESS target)
 
 # Target CH32V303
-SET(USE_CH32v3x_USB_OTG True CACHE INTERNAL "")
-SET(USE_CH32V3x        True CACHE INTERNAL "")
-SET(LN_ENABLE_USBD  True CACHE INTERNAL "")
-SET(LN_ENABLE_I2C   FALSE CACHE INTERNAL "")
-SET(LN_ENABLE_SPI   FALSE CACHE INTERNAL "")
+SET(USE_CH32v3x_USB_OTG     True CACHE INTERNAL "")
+SET(USE_CH32V3x             True CACHE INTERNAL "")
+SET(LN_ENABLE_USBD          True CACHE INTERNAL "")
+SET(LN_ENABLE_I2C           FALSE CACHE INTERNAL "")
+SET(LN_ENABLE_SPI           FALSE CACHE INTERNAL "")
+
 
 IF(DEBUG_BUILD)
+    ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6060")
 ELSE()
-    SET(USE_CLANG       TRUE CACHE INTERNAL "")
-    SET(LN_LTO "-flto"  CACHE INTERNAL "")
+    ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6030")
 ENDIF()
 
 
@@ -75,39 +76,29 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 
 ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=48000000)
-
-SET(LNA ${MINI}/lnGPIO.cpp
-        ${MINI}/start.S
-        ${MINI}/lnRCU_ch32v3x.cpp
-        ${MINI}/lnIRQ_riscv_ch32v3x.cpp
-        ${MINI}/lnSystemInit.cpp
-        ${MINI}/lnRCU.cpp
-        ${MINI}/start.cpp
-        ${MINI}/lnSerial.cpp
-        ${MINI}/lnFMC.cpp
-        ${MINI}/lnPinMapping.cpp
-        ${MINI}/lnCpuID_riscv_ch32v3x.cpp
-        ${MINI}/lnRCU_systemClock_riscv_ch32v3x.cpp 
-        ${MINI}/lnIRQ_riscv_ch32v3x.cpp 
-    )
-    
+ADD_SUBDIRECTORY( ${MINI} )
 SET(SRCS 
         src/main.cpp    
         src/hash_check.cpp    
         src/xxhash.c
         src/rebooted.cpp
         src/dfu.cpp
-        src/interrupt.cpp
         src/usb_setup.cpp
+        src/driver_uart.cpp
+        src/driver_timer.cpp
+        src/driver_interrupt.cpp
+        lnArduino_mini/ch32_src/start.S
         )
 IF(DEBUG_BUILD)
-    SET(EXTRA             src/logger_debug.cpp            embedded_printf/printf.c        )
+    SET(EXTRA             src/lnDebug_mini.cpp                   embedded_printf/printf.c        )
 ELSE()
-    SET(EXTRA         src/logger.cpp    )
+    SET(EXTRA           src/lnDebug_empty.cpp       )
 ENDIF()        
 
 
 ADD_SUBDIRECTORY(tinyUsb)
+
+target_link_libraries(tinyUsb miniArduino)
 
 SET(T ${CMAKE_SOURCE_DIR}/tinyUsb/src/src)
 
@@ -115,8 +106,9 @@ include_directories( ${T}/src/device)
 include_directories( ${T}/src/)
 include_directories( ${T}/../)
 
+
 ADD_EXECUTABLE(lnBMP_bootloader ${LNA} ${SRCS} ${EXTRA} )
-TARGET_LINK_LIBRARIES(lnBMP_bootloader tinyUsb)
+TARGET_LINK_LIBRARIES(lnBMP_bootloader miniArduino tinyUsb)
 TARGET_LINK_OPTIONS(lnBMP_bootloader  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
 #--
 POSTPROCESS( lnBMP_bootloader )

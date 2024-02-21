@@ -1,10 +1,19 @@
 
+/**
+ * @file dfu.cpp
+ * @author mean00
+ * @brief
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
 #include "class/dfu/dfu_device.h"
 #include "lnArduino.h"
 #include "lnCpuID.h"
 #include "lnFMC.h"
 #include "lnGPIO.h"
 #include "lnPeripherals.h"
+#include "memory_config.h"
 #include "pinout.h"
 #include "usbd.h"
 /**
@@ -12,6 +21,19 @@
 */
 
 // #define NO_FLASH
+#if 0
+#define printC(...)                                                                                                    \
+    {                                                                                                                  \
+    }
+#define printCHex(...)                                                                                                 \
+    {                                                                                                                  \
+    }
+#else
+extern void printC(const char *c);
+extern void printCHex(const char *c, uint32_t val_in_hex);
+#endif
+
+char _ctype_b[10];
 
 /**
  */
@@ -24,8 +46,6 @@ extern void systemReset();
 #define SysTicK_IRQn 12
 
 extern void uartInit();
-extern void printC(const char *c);
-extern void printCHex(const char *c, uint32_t val_in_hex);
 
 bool flashErase(uint32_t adr);
 bool flashWrite(uint32_t adr, const uint8_t *data, int size);
@@ -37,6 +57,8 @@ bool led = false;
 uint32_t rendezvous;
 
 /**
+ * @brief
+ *
  */
 void dfu()
 {
@@ -86,6 +108,11 @@ void dfu()
     deadEnd(0);
 }
 /**
+ * @brief
+ *
+ * @param adr
+ * @return true
+ * @return false
  */
 bool flashErase(uint32_t adr)
 {
@@ -98,14 +125,21 @@ bool flashErase(uint32_t adr)
 #ifdef NO_FLASH
     return true;
 #else
-    return lnFMC::eraseCh32v3(adr, 1);
+    return lnFMC::erase(adr, 1);
 #endif
 }
 /**
+ * @brief
+ *
+ * @param adr
+ * @param data
+ * @param size
+ * @return true
+ * @return false
  */
 bool flashWrite(uint32_t adr, const uint8_t *data, int size)
 {
-    if (adr < 8 * 1024) // dont write the bootloader
+    if (adr < (FLASH_BOOTLDR_SIZE_KB * 1024)) // dont write the bootloader
     {
         printC("Dont write the BL!\n");
         return false;
@@ -114,7 +148,7 @@ bool flashWrite(uint32_t adr, const uint8_t *data, int size)
 #ifdef NO_FLASH
     return true;
 #else
-    if (!lnFMC::writeCH32V3(adr, data, size))
+    if (!lnFMC::write(adr, data, size))
     {
         printCHex("write failed\n", adr);
         return false;
@@ -136,9 +170,10 @@ bool flashWrite(uint32_t adr, const uint8_t *data, int size)
 #endif
 }
 
-/*
-    Perform flashing...
-*/
+/**
+ * @brief flash write
+ *
+ */
 extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const *data, uint16_t length)
 {
     int er = DFU_STATUS_OK;
@@ -190,9 +225,11 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
     }
     tud_dfu_finish_flashing(er);
 }
-/**
- */
 
+/**
+ * @brief
+ *
+ */
 extern "C" void tud_dfu_detach_cb(void)
 {
     printC("Detach CB\n");
@@ -211,8 +248,12 @@ extern "C" void tud_dfu_manifest_cb(uint8_t alt)
     // nothing to do..
     tud_dfu_detach_cb();
 }
-
+/**
+ * @brief
+ *
+ */
 extern "C" uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state)
 {
     return 10; // ??
 }
+// EOF

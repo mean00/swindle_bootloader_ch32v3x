@@ -44,26 +44,34 @@ extern "C"
 #include "queue.h"
 #include "semphr.h"
 #include "task.h"
-
+#define xTaskCreate NONONO
 }
 
+#include "lnDebug.h"
 #include "lnFreeRTOS.h"
 #endif
-#include "lnDebug.h"
 #include "lnGPIO.h"
 #include "lnIRQ.h"
 #include "lnPeripherals.h"
 #include "lnRCU.h"
 
-// #include "lnPrintf.h"
+#include "lnPrintf.h"
 #include "lnSystemTime.h"
-
-#define xAssert(x)                                                                                                     \
-    if (!(x))                                                                                                          \
-    deadEnd(1)
+// MINI
+#include "MapleFreeRTOS1000_pp.h"
+extern "C" uint32_t SystemCoreClock;
+// /MINI
 
 #define LN_ALIGN(x) __attribute__((aligned(x)))
 #define LN_USED __attribute__((used))
 
-extern "C" void free(void *a) __THROW;
-extern "C" void *malloc(size_t size) __THROW __attribute_malloc__;
+#ifndef LN_LINUX
+extern "C" void free(void *a) _NOTHROW;
+extern "C" void *malloc(size_t size) _NOTHROW __attribute_malloc__;
+#else
+#include "stdlib.h"
+#endif // LN_LINUX
+
+extern volatile uint32_t lnScratchRegister; // used to prevent optimisation
+
+#include "lnPlatformDefines.h"
