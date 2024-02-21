@@ -36,7 +36,7 @@
 #endif
 
 #if CFG_TUH_ENABLED
-#include "host/usbh_classdriver.h"
+#include "host/usbh_pvt.h"
 #endif
 
 //--------------------------------------------------------------------+
@@ -72,6 +72,41 @@ bool tusb_inited(void)
 
   return ret;
 }
+
+//--------------------------------------------------------------------+
+// Descriptor helper
+//--------------------------------------------------------------------+
+
+uint8_t const * tu_desc_find(uint8_t const* desc, uint8_t const* end, uint8_t byte1)
+{
+  while(desc+1 < end)
+  {
+    if ( desc[1] == byte1 ) return desc;
+    desc += desc[DESC_OFFSET_LEN];
+  }
+  return NULL;
+}
+
+uint8_t const * tu_desc_find2(uint8_t const* desc, uint8_t const* end, uint8_t byte1, uint8_t byte2)
+{
+  while(desc+2 < end)
+  {
+    if ( desc[1] == byte1 && desc[2] == byte2) return desc;
+    desc += desc[DESC_OFFSET_LEN];
+  }
+  return NULL;
+}
+
+uint8_t const * tu_desc_find3(uint8_t const* desc, uint8_t const* end, uint8_t byte1, uint8_t byte2, uint8_t byte3)
+{
+  while(desc+3 < end)
+  {
+    if (desc[1] == byte1 && desc[2] == byte2 && desc[3] == byte3) return desc;
+    desc += desc[DESC_OFFSET_LEN];
+  }
+  return NULL;
+}
+
 
 //--------------------------------------------------------------------+
 // Endpoint Helper for both Host and Device stack
@@ -384,7 +419,7 @@ uint32_t tu_edpt_stream_read(tu_edpt_stream_t* s, void* buffer, uint32_t bufsize
 #if CFG_TUSB_DEBUG
 #include <ctype.h>
 
-#if CFG_TUSB_DEBUG >= 2
+#if CFG_TUSB_DEBUG >= CFG_TUH_LOG_LEVEL || CFG_TUSB_DEBUG >= CFG_TUD_LOG_LEVEL
 
 char const* const tu_str_speed[] = { "Full", "Low", "High" };
 char const* const tu_str_std_request[] =
@@ -402,6 +437,10 @@ char const* const tu_str_std_request[] =
   "Get Interface"     ,
   "Set Interface"     ,
   "Synch Frame"
+};
+
+char const* const tu_str_xfer_result[] = {
+    "OK", "FAILED", "STALLED", "TIMEOUT"
 };
 
 #endif
@@ -460,7 +499,7 @@ void tu_print_mem(void const *buf, uint32_t count, uint8_t indent)
       tu_printf("%04X: ", 16*i/item_per_line);
     }
 
-    memcpy(&value, buf8, size);
+    tu_memcpy_s(&value, sizeof(value), buf8, size);
     buf8 += size;
 
     tu_printf(" ");
