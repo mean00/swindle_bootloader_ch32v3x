@@ -3,9 +3,9 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 cmake_minimum_required(VERSION 3.13)
-MESSAGE(STATUS "======================")
-MESSAGE(STATUS "Starting lnBMP_bootloader ")
-MESSAGE(STATUS "======================")
+MESSAGE(STATUS "================================")
+MESSAGE(STATUS "Starting lnBMP_bootloader (ch32)")
+MESSAGE(STATUS "================================")
 
 OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
 
@@ -48,10 +48,10 @@ SET(MINI ${CMAKE_SOURCE_DIR}/lnArduino_mini)
 include(./mcuSelect.cmake)
 # Update paths
 IF(USE_CLANG)
-    SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_riscv_ch32v3x_clang.cmake)
+    SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_clang.cmake)
     configure_file( "${MINI}/clang.lld.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
 ELSE(USE_CLANG)
-    SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_riscv_ch32v3x.cmake)
+    SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain.cmake)
     configure_file( "${MINI}/ld.lds.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
 ENDIF(USE_CLANG)
 

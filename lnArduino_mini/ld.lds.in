@@ -3,8 +3,9 @@ OUTPUT_ARCH( "riscv" )
 ENTRY( _start )
 MEMORY
 {
-  ram (rwx) :       ORIGIN = 0x20000008, LENGTH = @LN_MCU_RAM_SIZE@K
-  rom (rx)  :       ORIGIN = 0x00000000, LENGTH = @LN_MCU_FLASH_SIZE@K-@LN_MCU_EEPROM_SIZE@K
+  ram (rwx) :       ORIGIN = 0x20000000, LENGTH = @LN_MCU_RAM_SIZE@K
+  bootloader (rx):  ORIGIN = 0x00000000, LENGTH = @LN_BOOTLOADER_SIZE@K
+  rom (rx)  :       ORIGIN = 0x00000000+@LN_BOOTLOADER_SIZE@K, LENGTH = @LN_MCU_FLASH_SIZE@K-@LN_MCU_EEPROM_SIZE@K-@LN_BOOTLOADER_SIZE@K
   e2prom (rx)  :    ORIGIN = 0x00000000+@LN_MCU_FLASH_SIZE@K-@LN_MCU_EEPROM_SIZE@K, LENGTH = @LN_MCU_EEPROM_SIZE@K
 }
 
@@ -162,13 +163,23 @@ SECTIONS
     *(.bss .bss.*)
     *(.gnu.linkonce.b.*)
     *(COMMON)
+   } > ram AT>ram 
+   .bss2 (NOLOAD) : 
+   {
+    *(.initial_heap)
     . = ALIGN(4);
-  } >ram AT>ram 
+    } >ram AT>ram 
 
   . = ALIGN(8);
   PROVIDE( _end = . ); /*0X2000,0340*/
   PROVIDE( end = . );
-  PROVIDE( _sp = ORIGIN(ram) + LENGTH(ram) - __stack_size);
+
+  .stack ORIGIN(ram) + LENGTH(ram) - __stack_size :
+  {
+    PROVIDE( _heap_end = . ); 
+    . = __stack_size;  
+    PROVIDE( _sp = . ); 
+  } >ram AT>ram 
 
   .eeprom eeprom_begin :
       {

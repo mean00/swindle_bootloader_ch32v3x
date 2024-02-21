@@ -21,7 +21,7 @@
  */
 MEMORY
 { 
-  ram (rwx) :       ORIGIN = 0x20000008, LENGTH = @LN_MCU_RAM_SIZE@K
+  ram (rwx) :       ORIGIN = 0x20000000, LENGTH = @LN_MCU_RAM_SIZE@K
   bootloader (rx):  ORIGIN = 0x00000000, LENGTH = @LN_BOOTLOADER_SIZE@K
   rom (rx)  :       ORIGIN = 0x00000000+@LN_BOOTLOADER_SIZE@K, LENGTH = @LN_MCU_FLASH_SIZE@K-@LN_MCU_EEPROM_SIZE@K-@LN_BOOTLOADER_SIZE@K
   e2prom (rx)  :    ORIGIN = 0x00000000+@LN_MCU_FLASH_SIZE@K-@LN_MCU_EEPROM_SIZE@K, LENGTH = @LN_MCU_EEPROM_SIZE@K
@@ -189,6 +189,10 @@ SECTIONS
 	        *(.sbss*)
           *(.bss .bss.* )
           *(COMMON)
+      } > REGION_BSS
+      .bss2 (NOLOAD) : 
+      {
+          *(.initial_heap)
           . = ALIGN (8);
           __bss_end__ = .;
           _end = __bss_end__;
