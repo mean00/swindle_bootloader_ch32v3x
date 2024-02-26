@@ -5,21 +5,30 @@
 
 #include "lnArduino.h"
 #include "stdarg.h"
-extern "C" void Logger_chars(int n, const char *data);
 
+#define PRINT_BUFFER_SIZE 128
+static char buffer[PRINT_BUFFER_SIZE+1];
+
+extern "C" void Logger_chars(int n, const char *data);
+extern "C" void uartSend_C(const char *c);
+/**
+ * @brief 
+ * 
+ */
 extern "C" void Logger_crash(const char *st)
 {
 }
-
+/**
+ * @brief 
+ * 
+ */
 extern "C" void Logger_C(const char *fmt, ...)
 {
-    static char buffer[128];
-
     va_list va;
     va_start(va, fmt);
-    vsnprintf(buffer, 127, fmt, va);
+    vsnprintf(buffer, PRINT_BUFFER_SIZE, fmt, va);
 
-    buffer[127] = 0;
+    buffer[PRINT_BUFFER_SIZE] = 0;
     va_end(va);
     Logger_chars(strlen(buffer), buffer);
 }
@@ -38,14 +47,14 @@ extern "C" void Logger_chars(int n, const char *data)
  */
 void Logger(const char *fmt...)
 {
-    static char buffer[128];
+
 
     if (fmt[0] == 0)
         return;
 
     va_list va;
     va_start(va, fmt);
-    vsnprintf(buffer, 127, fmt, va);
+    vsnprintf(buffer, PRINT_BUFFER_SIZE, fmt, va);
 
     buffer[127] = 0;
     va_end(va);
@@ -57,3 +66,17 @@ void LoggerInit()
 {
     int debugUart = 0;
 }
+
+/**
+ * @brief 
+ * 
+ * @param c 
+ * @param hex 
+ */
+void printCHex(const char *c, uint32_t hex)
+{
+    snprintf_(buffer,PRINT_BUFFER_SIZE,"%s 0x:%x\n",c,hex);
+    buffer[PRINT_BUFFER_SIZE]=0;
+    uartSend_C(buffer);
+}
+// EOF

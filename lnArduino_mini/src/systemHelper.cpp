@@ -110,6 +110,7 @@ void __throw_length_error(const char *a) //__throw_out_of_range
 /**
 
 */
+#if 0
 void lnDelayUs(uint32_t wait)
 {
     uint64_t target = lnGetUs() + wait;
@@ -145,5 +146,5 @@ void xDelay(uint32_t wait)
 {
     lnDelay(wait);
 }
-
+#endif
 // EOF

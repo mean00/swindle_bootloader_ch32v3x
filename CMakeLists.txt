@@ -8,7 +8,7 @@ MESSAGE(STATUS "Starting lnBMP_bootloader (ch32)")
 MESSAGE(STATUS "================================")
 
 OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
-
+include(./build_default.cmake)
 
 #SET(DEBUG_BUILD ON CACHE INTERNAL "")
 
@@ -83,13 +83,17 @@ SET(SRCS
         src/rebooted.cpp
         src/dfu.cpp
         src/usb_setup.cpp
-        src/stubs.cpp
+        src/driver_uart.cpp
+        src/driver_timer.cpp
+        src/driver_interrupt.cpp
+        src/lnSystemInit_mini.cpp
+        
         lnArduino_mini/ch32_src/start.S
         )
 IF(DEBUG_BUILD)
-    SET(EXTRA             src/logger_debug.cpp            embedded_printf/printf.c        )
+    SET(EXTRA             src/lnDebug_mini.cpp                   embedded_printf/printf.c        )
 ELSE()
-    SET(EXTRA         src/logger.cpp    )
+    SET(EXTRA           src/lnDebug_empty.cpp       )
 ENDIF()        
 
 

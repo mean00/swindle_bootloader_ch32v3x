@@ -10,7 +10,7 @@
 /**
 
 */
-
+char _ctype_b[10];
 // #define NO_FLASH
 
 /**
