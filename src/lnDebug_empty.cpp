@@ -2,18 +2,17 @@
 #include "stdarg.h"
 
 /**
- * @brief 
- * 
- * @param c 
- * @param hex 
+ * @brief
+ *
+ * @param c
+ * @param hex
  */
 void printCHex(const char *c, uint32_t hex)
 {
-   
 }
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 extern "C" void Logger_crash(const char *st)
 {

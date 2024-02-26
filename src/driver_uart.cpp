@@ -1,27 +1,35 @@
 /**
- * @file driver_timer.cpp  
- * @brief 
+ * @file driver_timer.cpp
+ * @brief
  * @version 0.1
  * @date 2024-02-26
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
-#include "lnArduino.h"
-#include "lnSerial.h"
-#include "lnPeripheral_priv.h"
-#include "lnSerial_priv.h"
 #include "embedded_printf/printf.h"
+#include "lnArduino.h"
+#include "lnPeripheral_priv.h"
+#include "lnSerial.h"
+#include "lnSerial_priv.h"
 
-#define STUBME(x)  void x() {xAssert(0);}
-#define STUBME_C(x)  extern "C" void x() {xAssert(0);}
+#define STUBME(x)                                                                                                      \
+    void x()                                                                                                           \
+    {                                                                                                                  \
+        xAssert(0);                                                                                                    \
+    }
+#define STUBME_C(x)                                                                                                    \
+    extern "C" void x()                                                                                                \
+    {                                                                                                                  \
+        xAssert(0);                                                                                                    \
+    }
 
 STUBME_C(USART0_IRQHandler)
 
 #define usart0 ((LN_USART_Registers *)LN_USART0_ADR)
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void uartInit()
 {
@@ -42,9 +50,9 @@ void uartInit()
     d->CTL0 |= LN_USART_CTL0_UEN;
 }
 /**
- * @brief 
- * 
- * @param c 
+ * @brief
+ *
+ * @param c
  */
 void uartPutChar(const char c)
 {
@@ -56,9 +64,9 @@ void uartPutChar(const char c)
     d->DATA = c;
 }
 /**
- * @brief 
- * 
- * @param c 
+ * @brief
+ *
+ * @param c
  */
 void uartSend(const char *c)
 {
@@ -75,8 +83,8 @@ void uartSend(const char *c)
     }
 }
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 extern "C" void uartSend_C(const char *c)
 {
@@ -93,14 +101,13 @@ extern "C" void uartSend_C(const char *c)
     }
 }
 /**
- * @brief 
- * 
- * @param c 
+ * @brief
+ *
+ * @param c
  */
 void printC(const char *c)
-{    
+{
     uartSend_C(c);
 }
-
 
 // EOF

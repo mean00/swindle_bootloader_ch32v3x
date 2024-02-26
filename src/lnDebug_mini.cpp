@@ -7,20 +7,20 @@
 #include "stdarg.h"
 
 #define PRINT_BUFFER_SIZE 128
-static char buffer[PRINT_BUFFER_SIZE+1];
+static char buffer[PRINT_BUFFER_SIZE + 1];
 
 extern "C" void Logger_chars(int n, const char *data);
 extern "C" void uartSend_C(const char *c);
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 extern "C" void Logger_crash(const char *st)
 {
 }
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 extern "C" void Logger_C(const char *fmt, ...)
 {
@@ -48,7 +48,6 @@ extern "C" void Logger_chars(int n, const char *data)
 void Logger(const char *fmt...)
 {
 
-
     if (fmt[0] == 0)
         return;
 
@@ -68,15 +67,15 @@ void LoggerInit()
 }
 
 /**
- * @brief 
- * 
- * @param c 
- * @param hex 
+ * @brief
+ *
+ * @param c
+ * @param hex
  */
 void printCHex(const char *c, uint32_t hex)
 {
-    snprintf_(buffer,PRINT_BUFFER_SIZE,"%s 0x:%x\n",c,hex);
-    buffer[PRINT_BUFFER_SIZE]=0;
+    snprintf_(buffer, PRINT_BUFFER_SIZE, "%s 0x:%x\n", c, hex);
+    buffer[PRINT_BUFFER_SIZE] = 0;
     uartSend_C(buffer);
 }
 // EOF

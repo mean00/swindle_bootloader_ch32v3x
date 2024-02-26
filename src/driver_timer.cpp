@@ -1,21 +1,27 @@
 /**
- * @file driver_timer.cpp 
- * @brief 
+ * @file driver_timer.cpp
+ * @brief
  * @version 0.1
  * @date 2024-02-26
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #include "lnArduino.h"
 #include "lnCpuID.h"
 #include "lnGPIO.h"
 #include "pinout.h"
 
-
-
-#define STUBME(x)  void x() {xAssert(0);}
-#define STUBME_C(x)  extern "C" void x() {xAssert(0);}
+#define STUBME(x)                                                                                                      \
+    void x()                                                                                                           \
+    {                                                                                                                  \
+        xAssert(0);                                                                                                    \
+    }
+#define STUBME_C(x)                                                                                                    \
+    extern "C" void x()                                                                                                \
+    {                                                                                                                  \
+        xAssert(0);                                                                                                    \
+    }
 /**  */
 typedef struct
 {
@@ -31,8 +37,8 @@ typedef struct
  */
 volatile int sysTick = 0;
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 extern "C" void LN_INTERRUPT_TYPE SysTick_Handler(void)
 {
@@ -40,8 +46,8 @@ extern "C" void LN_INTERRUPT_TYPE SysTick_Handler(void)
     SysTick->SR = 0;
 }
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void setupSysTick()
 {
@@ -53,9 +59,9 @@ void setupSysTick()
     SysTick->CTLR = 0xf;
 }
 /**
- * @brief 
- * 
- * @param us 
+ * @brief
+ *
+ * @param us
  */
 void delayMicroseconds(int us)
 {
@@ -63,18 +69,18 @@ void delayMicroseconds(int us)
     xDelay(ms);
 }
 /**
- * @brief 
- * 
- * @return uint32_t 
+ * @brief
+ *
+ * @return uint32_t
  */
 uint32_t lnGetMs()
 {
     return sysTick;
 }
 /**
- * @brief 
- * 
- * @param a 
+ * @brief
+ *
+ * @param a
  */
 void xDelay(unsigned int a)
 {
@@ -85,9 +91,9 @@ void xDelay(unsigned int a)
     }
 }
 /**
- * @brief 
- * 
- * @param delay 
+ * @brief
+ *
+ * @param delay
  */
 void lnDelay(unsigned int delay)
 {

@@ -1,26 +1,32 @@
 /**
  * @file driver_interrupt.cpp
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-02-26
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #include "lnArduino.h"
 #include "lnCpuID.h"
 #include "lnGPIO.h"
 #include "pinout.h"
 
-
-
-#define STUBME(x)  void x() {xAssert(0);}
-#define STUBME_C(x)  extern "C" void x() {xAssert(0);}
+#define STUBME(x)                                                                                                      \
+    void x()                                                                                                           \
+    {                                                                                                                  \
+        xAssert(0);                                                                                                    \
+    }
+#define STUBME_C(x)                                                                                                    \
+    extern "C" void x()                                                                                                \
+    {                                                                                                                  \
+        xAssert(0);                                                                                                    \
+    }
 
 STUBME_C(SW_Handler)
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void EnableIrqs()
 {
@@ -29,8 +35,8 @@ void EnableIrqs()
             "csrw   mstatus ,t1 \t\n" ::);
 }
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void DisableIrqs()
 {
@@ -42,55 +48,53 @@ void DisableIrqs()
             "csrw   mstatus ,t1 \t\n" ::);
 }
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void noInterrupts()
 {
     DisableIrqs();
 }
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void interrupts()
 {
     EnableIrqs();
 }
 
-
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void __attribute__((noreturn)) do_assert(const char *a)
 {
     __asm__("ebreak");
-    while(1)
+    while (1)
         __asm__("nop");
 }
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
-void LN_INTERRUPT_TYPE xxxOTG_FS_IRQHandler() 
+void LN_INTERRUPT_TYPE xxxOTG_FS_IRQHandler()
 {
-
 }
 
 /**
- * @brief 
- * 
- * @param a 
- * @param b 
+ * @brief
+ *
+ * @param a
+ * @param b
  */
-void dmaIrqHandler(int a,int b) 
+void dmaIrqHandler(int a, int b)
 {
     xAssert(0);
 }
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void systemReset()
 {
