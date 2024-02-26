@@ -107,6 +107,12 @@ include_directories( ${T}/src/device)
 include_directories( ${T}/src/)
 include_directories( ${T}/../)
 
+IF(FALSE)
+ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6030")
+ELSE()
+ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6060")
+ENDIF()
+
 ADD_EXECUTABLE(lnBMP_bootloader ${LNA} ${SRCS} ${EXTRA} )
 TARGET_LINK_LIBRARIES(lnBMP_bootloader miniArduino tinyUsb)
 TARGET_LINK_OPTIONS(lnBMP_bootloader  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )

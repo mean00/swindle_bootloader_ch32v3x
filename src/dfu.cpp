@@ -211,7 +211,10 @@ extern "C" void tud_dfu_manifest_cb(uint8_t alt)
     // nothing to do..
     tud_dfu_detach_cb();
 }
-
+/**
+ * @brief 
+ * 
+ */
 extern "C" uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state)
 {
     return 10; // ??
