@@ -3,13 +3,38 @@
  *  See license file
  */
 
-#include "lnFMC.h"
 #include "lnArduino.h"
 #include "lnCpuID.h"
+#include "lnFMC.h"
 #include "lnFMC_priv.h"
 #include "lnPeripheral_priv.h"
 
 LN_FMC *aFMC = (LN_FMC *)LN_FMC_ADR;
+
+#define LN_FMC_STAT_CH32_WR_BUSY (1 << 1)
+#define LN_FMC_CTL_CH32_FASTUNLOCK (1 << 15)
+#define LN_FMC_CTL_CH32_FASTPROGRAM (1 << 16)
+#define LN_FMC_CTL_CH32_FASTERASE (1 << 17)
+#define LN_FMC_CTL_CH32_FASTSTART (1 << 21)
+#define LN_FMC_CTL_CH32_EHMOD (1 << 24)
+
+void CH32V3_flashEnhanceMode(bool enable)
+{
+#if 0    
+    if(enable)
+    {
+        aFMC->CTL |= LN_FMC_CTL_CH32_EHMOD;
+    }else
+    {
+        aFMC->CTL &= ~LN_FMC_CTL_CH32_EHMOD;
+    }
+#endif
+}
+
+void lnInitFlash_ch32v3x()
+{
+    CH32V3_flashEnhanceMode(true);
+}
 
 /**
  *
@@ -20,10 +45,12 @@ class autoNoInterrupt
     autoNoInterrupt()
     {
         noInterrupts();
+        CH32V3_flashEnhanceMode(false);
     }
     ~autoNoInterrupt()
     {
         interrupts();
+        CH32V3_flashEnhanceMode(true);
     }
 };
 
@@ -100,7 +127,7 @@ static void waitNotWrBusy()
   \brief Erase using 256 bytes chunk, CH32 specific operation
   \brief /!\ When successfully erased, the value in flash is 0xe339e339
 */
-bool lnFMC::eraseCh32v3(const uint32_t startAddress, int sizeInKBytes)
+bool lnFMC::erase(const uint32_t startAddress, int sizeInKBytes)
 {
     uint32_t adr = startAddress;
     // Check we target an area within the flash (up to 256 kB)
@@ -109,9 +136,9 @@ bool lnFMC::eraseCh32v3(const uint32_t startAddress, int sizeInKBytes)
     xAssert(adr > 8 * 1024);
     // check the start address is 1 kB aligned
     xAssert(!(adr & ((1 << 10) - 1)));
+    adr += 0x08000000; // some leftover from older chip it seems
     autoNoInterrupt noInt;
     CH32_fastUnlock();
-    adr += 0x08000000; // some leftover from older chip it seems
     // Erase each page
     for (int i = 0; i < sizeInKBytes * 4; i++)
     {
@@ -159,7 +186,7 @@ static bool checkWriting()
     Write 256 bytes in one go, the datasheet says 128, it s incorrect
     The
 */
-bool lnFMC::writeCH32V3(const uint32_t startAddress, const uint8_t *data, int sizeInBytes)
+bool lnFMC::write(const uint32_t startAddress, const uint8_t *data, int sizeInBytes)
 {
     uint32_t adr = startAddress;
     // Check alignment

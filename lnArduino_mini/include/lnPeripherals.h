@@ -3,7 +3,6 @@
  *  See license file
  */
 #pragma once
-#include "lnArduino.h"
 void lnInitSystemClock();
 enum Peripherals
 {

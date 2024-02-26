@@ -98,7 +98,7 @@ bool flashErase(uint32_t adr)
 #ifdef NO_FLASH
     return true;
 #else
-    return lnFMC::eraseCh32v3(adr, 1);
+    return lnFMC::erase(adr, 1);
 #endif
 }
 /**
@@ -114,7 +114,7 @@ bool flashWrite(uint32_t adr, const uint8_t *data, int size)
 #ifdef NO_FLASH
     return true;
 #else
-    if (!lnFMC::writeCH32V3(adr, data, size))
+    if (!lnFMC::write(adr, data, size))
     {
         printCHex("write failed\n", adr);
         return false;

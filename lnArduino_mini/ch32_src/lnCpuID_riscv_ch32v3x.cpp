@@ -1,12 +1,11 @@
 #include "Arduino.h"
-// #include "MapleFreeRTOS1000_pp.h"
+#include "MapleFreeRTOS1000_pp.h"
 #include "lnCpuID.h"
 
 static lnCpuID::LN_MCU _mcu;
 static lnCpuID::LN_VENDOR _vendor;
 static int _flashSize = 0;
 static int _ramSize = 0;
-extern "C" uint32_t SystemCoreClock;
 
 enum MCU_IDENTIFICATION
 {

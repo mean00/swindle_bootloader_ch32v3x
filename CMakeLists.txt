@@ -75,31 +75,16 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 
 ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=48000000)
-
-SET(LNA ${MINI}/lnGPIO.cpp
-        ${MINI}/start.S
-        ${MINI}/lnRCU_ch32v3x.cpp
-        ${MINI}/lnIRQ_riscv_ch32v3x.cpp
-        ${MINI}/lnSystemInit.cpp
-        ${MINI}/lnRCU.cpp
-        #${MINI}/start.cpp
-        ${MINI}/lnSerial.cpp
-        ${MINI}/lnFMC.cpp
-        ${MINI}/lnPinMapping.cpp
-        ${MINI}/lnCpuID_riscv_ch32v3x.cpp
-        ${MINI}/lnRCU_systemClock_riscv_ch32v3x.cpp 
-        ${MINI}/lnIRQ_riscv_ch32v3x.cpp 
-    )
-    
+ADD_SUBDIRECTORY( ${MINI} )
 SET(SRCS 
         src/main.cpp    
         src/hash_check.cpp    
         src/xxhash.c
         src/rebooted.cpp
         src/dfu.cpp
-        src/interrupt.cpp
         src/usb_setup.cpp
         src/stubs.cpp
+        lnArduino_mini/ch32_src/start.S
         )
 IF(DEBUG_BUILD)
     SET(EXTRA             src/logger_debug.cpp            embedded_printf/printf.c        )
@@ -110,6 +95,8 @@ ENDIF()
 
 ADD_SUBDIRECTORY(tinyUsb)
 
+target_link_libraries(tinyUsb miniArduino)
+
 SET(T ${CMAKE_SOURCE_DIR}/tinyUsb/src/src)
 
 include_directories( ${T}/src/device)
@@ -117,7 +104,7 @@ include_directories( ${T}/src/)
 include_directories( ${T}/../)
 
 ADD_EXECUTABLE(lnBMP_bootloader ${LNA} ${SRCS} ${EXTRA} )
-TARGET_LINK_LIBRARIES(lnBMP_bootloader tinyUsb)
+TARGET_LINK_LIBRARIES(lnBMP_bootloader miniArduino tinyUsb)
 TARGET_LINK_OPTIONS(lnBMP_bootloader  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
 #--
 POSTPROCESS( lnBMP_bootloader )

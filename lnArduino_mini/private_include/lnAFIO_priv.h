@@ -5,6 +5,7 @@
 
 #pragma once
 #include "lnArduino.h"
+
 struct LN_AFIOx
 {
     uint32_t EC;
