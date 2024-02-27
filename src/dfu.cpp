@@ -16,11 +16,17 @@
 #include "memory_config.h"
 #include "pinout.h"
 #include "usbd.h"
-/**
 
-*/
+//
+#if 1
+#define LNFMC_ERASE lnFMC::erase
+#define LNFMC_WRITE lnFMC::write
+#else
+#define LNFMC_ERASE(...) true
+#define LNFMC_WRITE(...) true
+#endif
 
-// #define NO_FLASH
+//
 #if 0
 #define printC(...)                                                                                                    \
     {                                                                                                                  \
@@ -122,11 +128,7 @@ bool flashErase(uint32_t adr)
         return false;
     }
     printCHex("erase", adr);
-#ifdef NO_FLASH
-    return true;
-#else
-    return lnFMC::erase(adr, 1);
-#endif
+    return LNFMC_ERASE(adr, 1);
 }
 /**
  * @brief
@@ -145,10 +147,7 @@ bool flashWrite(uint32_t adr, const uint8_t *data, int size)
         return false;
     }
     printCHex("wr", adr);
-#ifdef NO_FLASH
-    return true;
-#else
-    if (!lnFMC::write(adr, data, size))
+    if (!LNFMC_WRITE(adr, data, size))
     {
         printCHex("write failed\n", adr);
         return false;
@@ -167,7 +166,6 @@ bool flashWrite(uint32_t adr, const uint8_t *data, int size)
         }
     }
     return correct;
-#endif
 }
 
 /**

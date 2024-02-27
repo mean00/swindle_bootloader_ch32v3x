@@ -50,10 +50,10 @@ include(./mcuSelect.cmake)
 # Update paths
 IF(USE_CLANG)
     SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_clang.cmake)
-    configure_file( "${MINI}/clang.lld.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
+    configure_file( "${MINI}/clang_ram_offset_by_8.lld.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
 ELSE(USE_CLANG)
     SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain.cmake)
-    configure_file( "${MINI}/ld.lds.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
+    configure_file( "${MINI}/ld_ram_offset_by_8.lds.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
 ENDIF(USE_CLANG)
 
 
