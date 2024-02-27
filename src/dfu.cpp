@@ -1,4 +1,12 @@
 
+/**
+ * @file dfu.cpp
+ * @author mean00
+ * @brief
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
 #include "class/dfu/dfu_device.h"
 #include "lnArduino.h"
 #include "lnCpuID.h"
@@ -10,8 +18,11 @@
 /**
 
 */
-char _ctype_b[10];
+
 // #define NO_FLASH
+
+char _ctype_b[10];
+#define LN_CH32_BOOTLOADER_SIZE (16 * 1024) // dont write the bootloader
 
 /**
  */
@@ -37,6 +48,8 @@ bool led = false;
 uint32_t rendezvous;
 
 /**
+ * @brief
+ *
  */
 void dfu()
 {
@@ -86,6 +99,11 @@ void dfu()
     deadEnd(0);
 }
 /**
+ * @brief
+ *
+ * @param adr
+ * @return true
+ * @return false
  */
 bool flashErase(uint32_t adr)
 {
@@ -102,10 +120,17 @@ bool flashErase(uint32_t adr)
 #endif
 }
 /**
+ * @brief
+ *
+ * @param adr
+ * @param data
+ * @param size
+ * @return true
+ * @return false
  */
 bool flashWrite(uint32_t adr, const uint8_t *data, int size)
 {
-    if (adr < 8 * 1024) // dont write the bootloader
+    if (adr < LN_CH32_BOOTLOADER_SIZE) // dont write the bootloader
     {
         printC("Dont write the BL!\n");
         return false;
@@ -136,9 +161,10 @@ bool flashWrite(uint32_t adr, const uint8_t *data, int size)
 #endif
 }
 
-/*
-    Perform flashing...
-*/
+/**
+ * @brief flash write
+ *
+ */
 extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const *data, uint16_t length)
 {
     int er = DFU_STATUS_OK;
@@ -190,9 +216,11 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
     }
     tud_dfu_finish_flashing(er);
 }
-/**
- */
 
+/**
+ * @brief
+ *
+ */
 extern "C" void tud_dfu_detach_cb(void)
 {
     printC("Detach CB\n");
@@ -219,3 +247,4 @@ extern "C" uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state)
 {
     return 10; // ??
 }
+// EOF

@@ -94,6 +94,9 @@ bool bootloader()
         go_dfu |= fw_ko;
     }
     clearRebootedIntoDfu();
+
+    go_dfu = true;
+
     if (go_dfu == false)
     {
         jumpIntoApp();
@@ -102,5 +105,13 @@ bool bootloader()
     dfu();
     return false;
 }
-
+/**
+ * @brief
+ *
+ * @return int
+ */
+int main()
+{
+    bootloader();
+}
 //--

@@ -86,8 +86,6 @@ SET(SRCS
         src/driver_uart.cpp
         src/driver_timer.cpp
         src/driver_interrupt.cpp
-        src/lnSystemInit_mini.cpp
-        
         lnArduino_mini/ch32_src/start.S
         )
 IF(DEBUG_BUILD)
