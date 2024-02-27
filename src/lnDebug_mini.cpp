@@ -78,4 +78,13 @@ void printCHex(const char *c, uint32_t hex)
     buffer[PRINT_BUFFER_SIZE] = 0;
     uartSend_C(buffer);
 }
+/**
+ * @brief
+ *
+ * @param c
+ */
+void printC(const char *c)
+{
+    uartSend_C(c);
+}
 // EOF

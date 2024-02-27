@@ -100,14 +100,5 @@ extern "C" void uartSend_C(const char *c)
         c++;
     }
 }
-/**
- * @brief
- *
- * @param c
- */
-void printC(const char *c)
-{
-    uartSend_C(c);
-}
 
 // EOF

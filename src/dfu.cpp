@@ -13,6 +13,7 @@
 #include "lnFMC.h"
 #include "lnGPIO.h"
 #include "lnPeripherals.h"
+#include "memory_config.h"
 #include "pinout.h"
 #include "usbd.h"
 /**
@@ -20,9 +21,19 @@
 */
 
 // #define NO_FLASH
+#if 0
+#define printC(...)                                                                                                    \
+    {                                                                                                                  \
+    }
+#define printCHex(...)                                                                                                 \
+    {                                                                                                                  \
+    }
+#else
+extern void printC(const char *c);
+extern void printCHex(const char *c, uint32_t val_in_hex);
+#endif
 
 char _ctype_b[10];
-#define LN_CH32_BOOTLOADER_SIZE (16 * 1024) // dont write the bootloader
 
 /**
  */
@@ -35,8 +46,6 @@ extern void systemReset();
 #define SysTicK_IRQn 12
 
 extern void uartInit();
-extern void printC(const char *c);
-extern void printCHex(const char *c, uint32_t val_in_hex);
 
 bool flashErase(uint32_t adr);
 bool flashWrite(uint32_t adr, const uint8_t *data, int size);
@@ -130,7 +139,7 @@ bool flashErase(uint32_t adr)
  */
 bool flashWrite(uint32_t adr, const uint8_t *data, int size)
 {
-    if (adr < LN_CH32_BOOTLOADER_SIZE) // dont write the bootloader
+    if (adr < (FLASH_BOOTLDR_SIZE_KB * 1024)) // dont write the bootloader
     {
         printC("Dont write the BL!\n");
         return false;
