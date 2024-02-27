@@ -4,7 +4,7 @@ SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 cmake_minimum_required(VERSION 3.13)
 MESSAGE(STATUS "================================")
-MESSAGE(STATUS "Starting lnBMP_bootloader (ch32)")
+MESSAGE(STATUS "Starting swindle_bootloader_ch32v3x_ (ch32)")
 MESSAGE(STATUS "================================")
 
 OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
@@ -58,7 +58,7 @@ ENDIF(USE_CLANG)
 
 
 
-PROJECT(lnBMP_bootloader NONE) # the NONE is very important !
+PROJECT(swindle_bootloader_ch32v3x_ NONE) # the NONE is very important !
 enable_language(C CXX ASM) # this is important too!
 
 IF(DEBUG_BUILD)
@@ -107,11 +107,11 @@ include_directories( ${T}/src/)
 include_directories( ${T}/../)
 
 
-ADD_EXECUTABLE(lnBMP_bootloader ${LNA} ${SRCS} ${EXTRA} )
-TARGET_LINK_LIBRARIES(lnBMP_bootloader miniArduino tinyUsb)
-TARGET_LINK_OPTIONS(lnBMP_bootloader  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
+ADD_EXECUTABLE(swindle_bootloader_ch32v3x_ ${LNA} ${SRCS} ${EXTRA} )
+TARGET_LINK_LIBRARIES(swindle_bootloader_ch32v3x_ miniArduino tinyUsb)
+TARGET_LINK_OPTIONS(swindle_bootloader_ch32v3x_  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
 #--
-POSTPROCESS( lnBMP_bootloader )
+POSTPROCESS( swindle_bootloader_ch32v3x_ )
 #
 #
 #
@@ -142,6 +142,6 @@ IF(DEBUG_BUILD)
 ENDIF()
 
 
-set_target_properties(lnBMP_bootloader PROPERTIES OUTPUT_NAME lnBMP_BL_${LN_MCU}_${COMPILER}${TAG} )
+set_target_properties(swindle_bootloader_ch32v3x_ PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x_${COMPILER}${TAG} )
 
 #

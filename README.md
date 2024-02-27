@@ -1,11 +1,11 @@
 
-CH32V3x DFU bootloader
+Swindle CH32V3x DFU bootloader
 ========================
 
 This is a "small" bootloader for the CH32V3x chips from WCH.
 It takes about 13 kB and is being built on top of tinyUSB.
 
-The downloaded application must be linked to be at 0x4000 (+16 kB)
+The downloaded application must be linked to be at 0x4000 (i.e. base +16 kB)
 
 There are several ways to enter DFU:
 
