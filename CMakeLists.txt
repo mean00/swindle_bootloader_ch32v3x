@@ -7,7 +7,7 @@ MESSAGE(STATUS "================================")
 MESSAGE(STATUS "Starting swindle_bootloader_ch32v3x_ (ch32)")
 MESSAGE(STATUS "================================")
 
-OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
+OPTION(DEBUG_BUILD "Enable verbose, larger code" ON)
 include(./build_default.cmake)
 
 #SET(DEBUG_BUILD ON CACHE INTERNAL "")
@@ -64,7 +64,7 @@ enable_language(C CXX ASM) # this is important too!
 IF(DEBUG_BUILD)
     ADD_DEFINITIONS("-O0 -g3 -DDEBUG_BUILD")
     SET(TAG "_DEBUG" CACHE INTERNAL "")
-    include_directories(embedded_printf)
+    include_directories(lnArduino/)
 ELSE()
     ADD_DEFINITIONS("-Oz")
 ENDIF(DEBUG_BUILD)
@@ -75,7 +75,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 
-ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=48000000)
+ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=48000000 -DPRINTF_DISABLE_SUPPORT_FLOAT)
 ADD_SUBDIRECTORY( ${MINI} )
 SET(SRCS 
         src/main.cpp    
@@ -90,7 +90,7 @@ SET(SRCS
         lnArduino_mini/ch32_src/start.S
         )
 IF(DEBUG_BUILD)
-    SET(EXTRA             src/lnDebug_mini.cpp                   embedded_printf/printf.c        )
+  SET(EXTRA             src/lnDebug_mini.cpp                   lnArduino/embedded_printf/printf.c        )
 ELSE()
     SET(EXTRA           src/lnDebug_empty.cpp       )
 ENDIF()        
