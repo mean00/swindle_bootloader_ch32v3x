@@ -4,10 +4,10 @@ SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 cmake_minimum_required(VERSION 3.13)
 MESSAGE(STATUS "================================")
-MESSAGE(STATUS "Starting swindle_bootloader_ch32v3x_ (ch32)")
+MESSAGE(STATUS "Starting swindle_bootloader_ch32v3x (ch32)")
 MESSAGE(STATUS "================================")
 
-OPTION(DEBUG_BUILD "Enable verbose, larger code" ON)
+OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
 include(./build_default.cmake)
 
 #SET(DEBUG_BUILD ON CACHE INTERNAL "")
@@ -29,9 +29,9 @@ add_custom_command(TARGET ${target}
 ENDMACRO(POSTPROCESS target)
 
 # Target CH32V303
-SET(USE_CH32v3x_USB_OTG     True CACHE INTERNAL "")
-SET(USE_CH32V3x             True CACHE INTERNAL "")
-SET(LN_ENABLE_USBD          True CACHE INTERNAL "")
+SET(USE_ch32v3xUSB_OTG      True  CACHE INTERNAL "")
+SET(USE_CH32V3x             True  CACHE INTERNAL "")
+SET(LN_ENABLE_USBD          True  CACHE INTERNAL "")
 SET(LN_ENABLE_I2C           FALSE CACHE INTERNAL "")
 SET(LN_ENABLE_SPI           FALSE CACHE INTERNAL "")
 
@@ -42,11 +42,10 @@ ELSE()
     ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6030")
 ENDIF()
 
-
+include(./mcuSelect.cmake)
 
 SET(MINI ${CMAKE_SOURCE_DIR}/lnArduino_mini)
 
-include(./mcuSelect.cmake)
 # Update paths
 IF(USE_CLANG)
     SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_clang.cmake)
@@ -58,26 +57,29 @@ ENDIF(USE_CLANG)
 
 
 
-PROJECT(swindle_bootloader_ch32v3x_ NONE) # the NONE is very important !
+PROJECT(swindle_bootloader_ch32v3x NONE) # the NONE is very important !
 enable_language(C CXX ASM) # this is important too!
 
 IF(DEBUG_BUILD)
     ADD_DEFINITIONS("-O0 -g3 -DDEBUG_BUILD")
     SET(TAG "_DEBUG" CACHE INTERNAL "")
-    include_directories(lnArduino/)
 ELSE()
     ADD_DEFINITIONS("-Oz")
 ENDIF(DEBUG_BUILD)
 #
+SET(MCU ${CMAKE_SOURCE_DIR}/lnArduino/mcus/riscv_ch32v3x)
+include_directories(lnArduino/)
+include_directories( ${MCU}/include )
 include_directories( ${MINI} )
 include_directories( ${MINI}/include )
-include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories( ${CMAKE_SOURCE_DIR})
+include_directories( ${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/override)
 
 
-ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=48000000 -DPRINTF_DISABLE_SUPPORT_FLOAT)
+ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=${LN_MCU_SPEED} -DPRINTF_DISABLE_SUPPORT_FLOAT)
 ADD_SUBDIRECTORY( ${MINI} )
-SET(SRCS 
+SET(BL_SRCS 
         src/main.cpp    
         src/hash_check.cpp    
         src/xxhash.c
@@ -87,35 +89,26 @@ SET(SRCS
         src/driver_uart.cpp
         src/driver_timer.cpp
         src/driver_interrupt.cpp
-        lnArduino_mini/ch32_src/start.S
+        ${MCU}/start.S
+        CACHE INTERNAL ""
         )
 IF(DEBUG_BUILD)
-  SET(EXTRA             src/lnDebug_mini.cpp                   lnArduino/embedded_printf/printf.c        )
+    SET(EXTRA             src/lnDebug_mini.cpp                   lnArduino/embedded_printf/printf.c        )
 ELSE()
     SET(EXTRA           src/lnDebug_empty.cpp       )
 ENDIF()        
 
-
-ADD_SUBDIRECTORY(tinyUsb)
+include(./tiny.cmake)
 
 target_link_libraries(tinyUsb miniArduino)
 
-SET(T ${CMAKE_SOURCE_DIR}/tinyUsb/src/src)
 
-include_directories( ${T}/src/device)
-include_directories( ${T}/src/)
-include_directories( ${T}/../)
-
-
-ADD_EXECUTABLE(swindle_bootloader_ch32v3x_ ${LNA} ${SRCS} ${EXTRA} )
-TARGET_LINK_LIBRARIES(swindle_bootloader_ch32v3x_ miniArduino tinyUsb)
-TARGET_LINK_OPTIONS(swindle_bootloader_ch32v3x_  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
+#ADD_EXECUTABLE(swindle_bootloader_ch32v3x ${LNA} ${SRCS} ${EXTRA} )
+ADD_EXECUTABLE(swindle_bootloader_ch32v3x ${BL_SRCS} ${EXTRA})
+TARGET_LINK_LIBRARIES(swindle_bootloader_ch32v3x miniArduino tinyUsb)
+TARGET_LINK_OPTIONS(swindle_bootloader_ch32v3x  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
 #--
-POSTPROCESS( swindle_bootloader_ch32v3x_ )
 #
-#
-#
-SET(TGT_NAME "CH32V3x")
 #
 #
 #
@@ -142,6 +135,7 @@ IF(DEBUG_BUILD)
 ENDIF()
 
 
-set_target_properties(swindle_bootloader_ch32v3x_ PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x_${COMPILER}${TAG} )
+set_target_properties(swindle_bootloader_ch32v3x PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x${COMPILER}${TAG} )
+POSTPROCESS( swindle_bootloader_ch32v3x )
 
 #
