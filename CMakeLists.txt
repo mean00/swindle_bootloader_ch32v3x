@@ -45,7 +45,7 @@ ENDIF()
 include(./mcuSelect.cmake)
 
 SET(MINI ${CMAKE_SOURCE_DIR}/lnArduino_mini)
-
+include_directories(${MINI}/override)
 # Update paths
 IF(USE_CLANG)
     SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_clang.cmake)
@@ -103,15 +103,17 @@ ELSE()
     SET(EXTRA           src/lnDebug_empty.cpp       )
 ENDIF()        
 
+
+
 include(./tiny.cmake)
 
 target_link_libraries(tinyUsb miniArduino)
 
-include_directories(${CMAKE_SOURCE_DIR}/override)
 
-#ADD_EXECUTABLE(swindle_bootloader_ch32v3x ${LNA} ${SRCS} ${EXTRA} )
+
 ADD_EXECUTABLE(swindle_bootloader_ch32v3x ${BL_SRCS} ${EXTRA})
-TARGET_LINK_LIBRARIES(swindle_bootloader_ch32v3x miniArduino tinyUsb)
+TARGET_LINK_LIBRARIES(swindle_bootloader_ch32v3x  tinyUsb )
+TARGET_LINK_LIBRARIES(swindle_bootloader_ch32v3x  miniArduino)
 TARGET_LINK_OPTIONS(swindle_bootloader_ch32v3x  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
 #--
 #
