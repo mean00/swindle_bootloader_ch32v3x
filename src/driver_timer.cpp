@@ -12,6 +12,13 @@
 #include "lnGPIO.h"
 #include "pinout.h"
 
+#ifdef USE_CH32v3x_HW_IRQ_STACK
+   #define LN_IRQ_FOS
+#else
+   #define LN_IRQ_FOS  __attribute__((interrupt))
+#endif
+
+
 #define STUBME(x)                                                                                                      \
     void x()                                                                                                           \
     {                                                                                                                  \
@@ -40,7 +47,8 @@ volatile int sysTick = 0;
  * @brief
  *
  */
-extern "C" void LN_INTERRUPT_TYPE SysTick_Handler(void)
+extern "C" void SysTick_Handler(void)   __attribute__((used)) LN_IRQ_FOS;
+extern "C" void SysTick_Handler(void) 
 {
     sysTick++;
     SysTick->SR = 0;

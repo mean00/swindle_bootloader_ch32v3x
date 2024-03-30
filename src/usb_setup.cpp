@@ -93,8 +93,8 @@ extern "C" uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
 // array of pointer to string descriptors
 char const *string_desc_arr[] = {
     (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
-    "lnBMP",                    // 1: Manufacturer
-    "lnBMP DFU",                // 2: Product
+    "swindle",                    // 1: Manufacturer
+    "swindle DFU (CH32)",                // 2: Product
     "123456",                   // 3: Serials, should use chip ID
     FLASH_DFU_STRING,
     //"lnBMP_FW",                       // 4: DFU Partition 1
