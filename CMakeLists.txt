@@ -10,6 +10,9 @@ MESSAGE(STATUS "================================")
 OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
 include(./build_default.cmake)
 
+SET(MINI        ${CMAKE_SOURCE_DIR}/lnArduino_mini CACHE INTERNAL "")
+SET(AF_FOLDER   ${CMAKE_SOURCE_DIR}/lnArduino CACHE INTERNAL "")
+SET(MCU         ${CMAKE_SOURCE_DIR}/lnArduino/mcus/riscv_ch32v3x CACHE INTERNAL "")
 #SET(DEBUG_BUILD ON CACHE INTERNAL "")
 
 
@@ -44,18 +47,17 @@ ENDIF()
 
 include(./mcuSelect.cmake)
 
-SET(MINI ${CMAKE_SOURCE_DIR}/lnArduino_mini)
 include_directories(${MINI}/override)
 # Update paths
 IF(USE_CLANG)
-    SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_clang.cmake)
+    SET(xCMAKE_TOOLCHAIN_FILE ${MCU}/toolchain_clang.cmake)    
     configure_file( "${MINI}/clang_ram_offset_by_8.lld.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
 ELSE(USE_CLANG)
-    SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain.cmake)
+    SET(xCMAKE_TOOLCHAIN_FILE ${MCU}/toolchain.cmake)
     configure_file( "${MINI}/ld_ram_offset_by_8.lds.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
 ENDIF(USE_CLANG)
 
-
+include(${xCMAKE_TOOLCHAIN_FILE})
 
 PROJECT(swindle_bootloader_ch32v3x NONE) # the NONE is very important !
 enable_language(C CXX ASM) # this is important too!
@@ -69,7 +71,7 @@ ELSE()
     ADD_DEFINITIONS("-Oz")
 ENDIF(DEBUG_BUILD)
 #
-SET(MCU ${CMAKE_SOURCE_DIR}/lnArduino/mcus/riscv_ch32v3x)
+
 include_directories(lnArduino/)
 #include_directories(lnArduino/include)
 include_directories(lnArduino/arduinoLayer/include)
@@ -82,7 +84,7 @@ include_directories( ${CMAKE_SOURCE_DIR})
 include_directories( ${CMAKE_SOURCE_DIR}/include)
 
 
-ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=${LN_MCU_SPEED} -DPRINTF_DISABLE_SUPPORT_FLOAT -isystem ${CMAKE_SOURCE_DIR}/override)
+ADD_DEFINITIONS(-DUSE_CH32v3x_HW_IRQ_STACK=1 -DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=${LN_MCU_SPEED} -DPRINTF_DISABLE_SUPPORT_FLOAT -isystem ${CMAKE_SOURCE_DIR}/override)
 ADD_SUBDIRECTORY( ${MINI} )
 SET(BL_SRCS 
         src/main.cpp    
