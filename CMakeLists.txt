@@ -60,6 +60,8 @@ ENDIF(USE_CLANG)
 PROJECT(swindle_bootloader_ch32v3x NONE) # the NONE is very important !
 enable_language(C CXX ASM) # this is important too!
 
+include_directories(${CMAKE_SOURCE_DIR}/override)
+
 IF(DEBUG_BUILD)
     ADD_DEFINITIONS("-O0 -g3 -DDEBUG_BUILD")
     SET(TAG "_DEBUG" CACHE INTERNAL "")
@@ -69,15 +71,18 @@ ENDIF(DEBUG_BUILD)
 #
 SET(MCU ${CMAKE_SOURCE_DIR}/lnArduino/mcus/riscv_ch32v3x)
 include_directories(lnArduino/)
+#include_directories(lnArduino/include)
+include_directories(lnArduino/arduinoLayer/include)
 include_directories( ${MCU}/include )
+include_directories( ${MCU}/private_include )
+include_directories( lnArduino/private_include )
 include_directories( ${MINI} )
 include_directories( ${MINI}/include )
 include_directories( ${CMAKE_SOURCE_DIR})
 include_directories( ${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/override)
 
 
-ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=${LN_MCU_SPEED} -DPRINTF_DISABLE_SUPPORT_FLOAT)
+ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=${LN_MCU_SPEED} -DPRINTF_DISABLE_SUPPORT_FLOAT -isystem ${CMAKE_SOURCE_DIR}/override)
 ADD_SUBDIRECTORY( ${MINI} )
 SET(BL_SRCS 
         src/main.cpp    
@@ -102,6 +107,7 @@ include(./tiny.cmake)
 
 target_link_libraries(tinyUsb miniArduino)
 
+include_directories(${CMAKE_SOURCE_DIR}/override)
 
 #ADD_EXECUTABLE(swindle_bootloader_ch32v3x ${LNA} ${SRCS} ${EXTRA} )
 ADD_EXECUTABLE(swindle_bootloader_ch32v3x ${BL_SRCS} ${EXTRA})
