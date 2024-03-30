@@ -1,20 +1,20 @@
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+SET(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
 
 cmake_minimum_required(VERSION 3.13)
-MESSAGE(STATUS "================================")
+MESSAGE(STATUS "==========================================")
 MESSAGE(STATUS "Starting swindle_bootloader_ch32v3x (ch32)")
-MESSAGE(STATUS "================================")
+MESSAGE(STATUS "==========================================")
 
 OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
-include(./build_default.cmake)
+
 
 SET(MINI        ${CMAKE_SOURCE_DIR}/lnArduino_mini CACHE INTERNAL "")
 SET(AF_FOLDER   ${CMAKE_SOURCE_DIR}/lnArduino CACHE INTERNAL "")
 SET(MCU         ${CMAKE_SOURCE_DIR}/lnArduino/mcus/riscv_ch32v3x CACHE INTERNAL "")
-#SET(DEBUG_BUILD ON CACHE INTERNAL "")
 
+include(./build_default.cmake)
 
 MACRO(POSTPROCESS target)
 add_custom_command(TARGET ${target}
@@ -31,9 +31,6 @@ add_custom_command(TARGET ${target}
     )
 ENDMACRO(POSTPROCESS target)
 
-# Target CH32V303
-SET(USE_ch32v3xUSB_OTG      True  CACHE INTERNAL "")
-SET(USE_CH32V3x             True  CACHE INTERNAL "")
 SET(LN_ENABLE_USBD          True  CACHE INTERNAL "")
 SET(LN_ENABLE_I2C           FALSE CACHE INTERNAL "")
 SET(LN_ENABLE_SPI           FALSE CACHE INTERNAL "")
