@@ -80,7 +80,7 @@ void dfu()
 
     // enable sysTick
     _enableDisable_direct(true, SysTicK_IRQn);
-    printC("Going DFU\n");
+    printC("Entering DFU\n");
     // enable interrupt globally
     EnableIrqs();
 
@@ -115,7 +115,7 @@ bool flashErase(uint32_t adr)
         printC("Dont erase the BL!\n");
         return false;
     }
-    printCHex("erase", adr);
+   // printCHex("erase", adr);
     return LNFMC_ERASE(adr, 1);
 }
 /**
@@ -131,13 +131,13 @@ bool flashWrite(uint32_t adr, const uint8_t *data, int size)
 {
     if (adr < (FLASH_BOOTLDR_SIZE_KB * 1024)) // dont write the bootloader
     {
-        printC("Dont write the BL!\n");
+      //  printC("Dont write the BL!\n");
         return false;
     }
-    printCHex("wr", adr);
+    //printCHex("wr", adr);
     if (!LNFMC_WRITE(adr, data, size))
     {
-        printCHex("write failed\n", adr);
+     //   printCHex("write failed\n", adr);
         return false;
     }
     uint8_t *p = (uint8_t *)adr;
@@ -183,7 +183,7 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
         }
         case 0x21: // set address
         {
-            printC("setAdr\n");
+            //printC("setAdr\n");
             target_address = address;
             // return;
             break;
@@ -197,10 +197,10 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
     }
     break;
     case 1:
-        printC("Block1 CB\n");
+        //printC("Block1 CB\n");
         break;
     default:
-        printC("other CB\n");
+        //printC("other CB\n");
         uint32_t adr = target_address + (block_num - 2) * CFG_TUD_DFU_XFER_BUFSIZE;
         if (!flashWrite(adr, data, length))
         {
