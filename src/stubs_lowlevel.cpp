@@ -14,91 +14,31 @@
 #include "lnGPIO.h"
 #include "pinout.h"
 
-#define STUBME(x)                                                                                                      \
-    void x()                                                                                                           \
-    {                                                                                                                  \
-        xAssert(0);                                                                                                    \
-    }
-#define STUBME_C(x)                                                                                                    \
-    extern "C" void x()                                                                                                \
-    {                                                                                                                  \
-        xAssert(0);                                                                                                    \
-    }
-
-STUBME(noInterrupts)
-STUBME(interrupts)
-STUBME(DisableIrqs)
-STUBME(EnableIrqs)
-
-STUBME_C(SW_Handler)
-STUBME_C(USART0_IRQHandler)
-
-STUBME(systemReset)
 
 /**
- * @brief
- *
+ * @brief 
+ * 
  */
-void uartInit()
+extern "C" void vPortEnterCritical()
 {
-}
-void uartPutChar(char c)
-{
-}
-extern "C" void uartSend_C()
-{
-}
-
-volatile uint32_t sysTick;
-/**
- * @brief
- *
- */
-void setupSysTick()
-{
-    sysTick = 0;
+    deadEnd(0);
 }
 /**
- * @brief
- *
+ * @brief 
+ * 
  */
-extern "C" void SysTick_Handler(void)
+extern "C" void vPortExitCritical()
 {
-    sysTick++;
+    deadEnd(0);
 }
 /**
- * @brief
- *
- * @param a
+ * @brief 
+ * 
+ * @param periph 
  */
-void lnDelay(unsigned int a)
+void resetMe(const Peripherals periph)
 {
-    uint32_t limit = sysTick + a + 1;
-    while (1)
-    {
-        __asm__("nop");
-        if (sysTick > limit)
-            return;
-    }
-}
-/**
- * @brief
- *
- */
-void __attribute__((noreturn)) do_assert(const char *a)
-{
-    __asm__("ebreak");
-    while (1)
-        __asm__("nop");
-}
-/**
- * @brief
- *
- * @param a
- * @param b
- */
-void dmaIrqHandler(int a, int b)
-{
-    xAssert(0);
+    lnPeripherals::reset(periph);
+    lnPeripherals::enable(periph);
 }
 // EOF

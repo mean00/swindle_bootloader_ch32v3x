@@ -38,7 +38,7 @@ SET(LN_ENABLE_SPI           FALSE CACHE INTERNAL "")
 
 
 include(./mcuSelect.cmake)
-ADD_DEFINITIONS(-DUSE_CH32v3x_HW_IRQ_STACK=1 -DARCH_FPU=1 -DLN_MCU_SPEED=${LN_MCU_SPEED} -DPRINTF_DISABLE_SUPPORT_FLOAT -isystem ${CMAKE_SOURCE_DIR}/override)
+ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DUSE_CH32v3x_HW_IRQ_STACK=1 -DARCH_FPU=1 -DLN_MCU_SPEED=${LN_MCU_SPEED} -DPRINTF_DISABLE_SUPPORT_FLOAT -isystem ${CMAKE_SOURCE_DIR}/override)
 
 
 IF(DEBUG_BUILD)
@@ -98,6 +98,7 @@ SET(BL_SRCS
         src/driver_uart.cpp
         src/driver_timer.cpp
         src/driver_interrupt.cpp
+        src/stubs_lowlevel.cpp
         ${MCU}/start.S
         CACHE INTERNAL ""
         )

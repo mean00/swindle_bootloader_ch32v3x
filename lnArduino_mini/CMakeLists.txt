@@ -18,7 +18,8 @@ ADD_LIBRARY(miniArduino STATIC
     ${CMAKE_SOURCE_DIR}/lnArduino/src/systemAlloc.cpp
     ${CMAKE_SOURCE_DIR}/lnArduino/src/systemHelper.cpp
     ${CMAKE_SOURCE_DIR}/lnArduino/mcus/common_bluepill/lnGPIO.cpp
-    ${CMAKE_SOURCE_DIR}/lnArduino/mcus/common_bluepill/lnRCU.cpp    
+    ${CMAKE_SOURCE_DIR}/lnArduino/mcus/common_bluepill/lnRCU.cpp        
+
     )
 
 target_include_directories( miniArduino PUBLIC include ch32_include private_include)
