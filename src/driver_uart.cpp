@@ -13,20 +13,7 @@
 #include "lnSerial.h"
 #include "lnSerial_priv.h"
 
-#define STUBME(x)                                                                                                      \
-    void x()                                                                                                           \
-    {                                                                                                                  \
-        xAssert(0);                                                                                                    \
-    }
-#define STUBME_C(x)                                                                                                    \
-    extern "C" void x()                                                                                                \
-    {                                                                                                                  \
-        xAssert(0);                                                                                                    \
-    }
-
-STUBME_C(USART0_IRQHandler)
-
-#define usart0 ((LN_USART_Registers *)LN_USART0_ADR)
+static  LN_USART_Registers *usart0 =((LN_USART_Registers *)LN_USART0_ADR);
 /**
  * @brief
  *
@@ -87,12 +74,7 @@ void uartSend(const char *c)
     LN_USART_Registers *d = usart0;
     while (*c)
     {
-
-        while (!(d->STAT & LN_USART_STAT_TBE))
-        {
-            __asm__("nop");
-        }
-        d->DATA = *c;
+        uartPutChar(*c);
         c++;
     }
 }
@@ -102,17 +84,7 @@ void uartSend(const char *c)
  */
 extern "C" void uartSend_C(const char *c)
 {
-    LN_USART_Registers *d = usart0;
-    while (*c)
-    {
-
-        while (!(d->STAT & LN_USART_STAT_TBE))
-        {
-            __asm__("nop");
-        }
-        d->DATA = *c;
-        c++;
-    }
+   uartSend(c);
 }
 
 // EOF

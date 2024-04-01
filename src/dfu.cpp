@@ -13,10 +13,11 @@
 #include "lnFMC.h"
 #include "lnGPIO.h"
 #include "lnPeripherals.h"
+#include "swindle_bl.h"
 #include "memory_config.h"
 #include "pinout.h"
 #include "usbd.h"
-extern __attribute__((section(".initial_heap"))) uint8_t ucHeap[8*1024];
+#include "ch32v30x.h"
 
 //
 #if 1
@@ -27,59 +28,35 @@ extern __attribute__((section(".initial_heap"))) uint8_t ucHeap[8*1024];
 #define LNFMC_WRITE(...) true
 #endif
 
-//
-#if 0
-#define printC(...)                                                                                                    \
-    {                                                                                                                  \
-    }
-#define printCHex(...)                                                                                                 \
-    {                                                                                                                  \
-    }
-#else
-extern void printC(const char *c);
-extern void printCHex(const char *c, uint32_t val_in_hex);
-#endif
-
-char _ctype_b[10];
 
 /**
  */
-extern void lnIrqSysInit();
-extern void _enableDisable_direct(bool enableDisable, const int &irq_num);
-extern void setupSysTick();
-extern void EnableIrqs();
-extern void systemReset();
 
-#define SysTicK_IRQn 12
 
-bool flashErase(uint32_t adr);
-bool flashWrite(uint32_t adr, const uint8_t *data, int size);
-uint32_t lnGetMs();
+static bool led = false;
+static uint32_t rendezvous;
+
 
 uint32_t target_address;
 
-bool led = false;
-uint32_t rendezvous;
 
 /**
  * @brief
  *
  */
 void dfu()
-{   
-    ucHeap[0]=0; // mark as used
+{       
     // sys tick
     setupSysTick();
 
-    // enable 48 Mhz
+    // enable 48 Mhz clock for usb FS
     lnPeripherals::enableUsb48Mhz();
 
     // enable USB
-    lnPeripherals::enable(Peripherals::pUSBFS_OTG_CH32v3x);
-    
+    lnPeripherals::enable(Peripherals::pUSBFS_OTG_CH32v3x);    
 
     // enable sysTick
-    _enableDisable_direct(true, SysTicK_IRQn);
+    lnEnableInterrupt(LN_IRQ_SYSTICK);    
     printC("Entering DFU\n");
     // enable interrupt globally
     EnableIrqs();
