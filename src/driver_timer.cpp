@@ -54,6 +54,14 @@ extern "C" void SysTick_Handler(void)
     SysTick->SR = 0;
 }
 /**
+ * @brief 
+ * 
+ */
+ extern "C" void SysTick_Stop(void) 
+ {
+       SysTick->CTLR = 0;
+ }
+/**
  * @brief
  *
  */

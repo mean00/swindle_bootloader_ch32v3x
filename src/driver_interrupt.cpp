@@ -12,6 +12,8 @@
 #include "lnGPIO.h"
 #include "pinout.h"
 
+#include "lnRCU_priv.h"
+
 #define STUBME(x)                                                                                                      \
     void x()                                                                                                           \
     {                                                                                                                  \
@@ -98,4 +100,19 @@ void systemReset()
         __asm__("nop");
     }
 }
+/**
+ * @brief 
+ * 
+ */
+extern LN_RCU *arcu;
+extern "C" void clockDefault()
+{
+    uint32_t clks =  arcu->CFG0;
+   // now switch system clock to IRC8
+    clks &= ~(LN_RCU_CFG0_SYSCLOCK_MASK);
+    clks |= LN_RCU_CFG0_SYSCLOCK_IRC8; // switch back to IRC8 as syslock
+    arcu->CFG0 = clks;
+    arcu->CTL &= ~LN_RCU_CTL_PLLEN; // stop PLL
+}
+
 // EOF

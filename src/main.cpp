@@ -112,12 +112,13 @@ bool bootloader()
     int go_dfu = false;
 #define NEXT_STEP(x)                                                                                                   \
     {                                                                                                                  \
-        if (!go_dfu)                                                                                                   \
+        if (!go_dfu)  {                                                                                                \
             go_dfu |= (int)x;                                                                                          \
+            printC(#x); printC("\n");                                                                                   \
+        } \
     }
     NEXT_STEP(rebooted_into_dfu());
-    NEXT_STEP(check_forced_dfu());
-    printC("Forced DFU!\n");
+    NEXT_STEP(check_forced_dfu());    
     if (!go_dfu)
     {
         int fw_ko = 0;
@@ -134,9 +135,11 @@ bool bootloader()
 
     if (go_dfu == false)
     {
+        printC("Jumping into app\n");
         jumpIntoApp();
     }
     lnCpuID::identify();
+    printC("Going DFU\n");
     dfu();
     return false;
 }

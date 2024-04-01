@@ -1,6 +1,6 @@
 #include "lnArduino.h"
 #include "stdarg.h"
-
+void uartSend(const char *c);
 /**
  * @brief
  *
@@ -9,6 +9,7 @@
  */
 void printCHex(const char *c, uint32_t hex)
 {
+            uartSend(c);
 }
 /**
  * @brief
@@ -16,6 +17,8 @@ void printCHex(const char *c, uint32_t hex)
  */
 extern "C" void Logger_crash(const char *st)
 {
+            uartSend("** CRASH **\n");
+            uartSend(st);
 }
 
 /**
@@ -25,5 +28,6 @@ extern "C" void Logger_crash(const char *st)
  */
 void printC(const char *c)
 {
+        uartSend(c);
 }
 //

@@ -5,6 +5,8 @@
 extern uint32_t __msp_init;
 uint64_t *marker = (uint64_t *)0x0000000020000000; // marker is at the beginning
 
+extern "C" void SysTick_Stop(void) ;
+extern "C" void clockDefault();
 // Reboots the system into the bootloader, making sure
 // it enters in DFU mode.
 void reboot_into_bootloader()
@@ -41,6 +43,10 @@ void jumpIntoApp()
     lnDigitalWrite(LED2, 0);
     // there must be a simpler way...
     DisableIrqs();
+    SysTick_Stop();
+    // disable FPU etc..
+    asm volatile("csrw 0x804, x0\n"); // INTSYSCR : hw stack etc...
+    clockDefault();
 #define JUMP                                                                                                           \
     "lui t0, 0x4\t\n"                                                                                                  \
     "jalr x0,0(t0)\n"
