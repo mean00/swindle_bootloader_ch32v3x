@@ -50,6 +50,20 @@ void uartInit()
     d->CTL0 |= LN_USART_CTL0_UEN;
 }
 /**
+ * @brief 
+ * 
+ */
+void uartDeinit()
+{
+    LN_USART_Registers *d = usart0;
+    lnPinMode(PA9, lnALTERNATE_PP);
+    // Disable RX & TX
+    d->CTL0 &= ~LN_USART_CTL0_KEEP_MASK; // default is good enough
+    d->CTL0 &= ~LN_USART_CTL0_UEN;    
+    d->CTL0 &= ~LN_USART_CTL0_TEN;    
+}
+
+/**
  * @brief
  *
  * @param c
