@@ -30,9 +30,7 @@ STUBME_C(SW_Handler)
  */
 void EnableIrqs()
 {
-    __asm__("csrr   t1, mstatus \t\n"
-            "ori    t1 , t1, 0x8 \t\n"
-            "csrw   mstatus ,t1 \t\n" ::);
+      __asm volatile("csrs mstatus, %0" :: "r"(0x88) );
 }
 /**
  * @brief
@@ -40,12 +38,7 @@ void EnableIrqs()
  */
 void DisableIrqs()
 {
-    __asm__("li     t1,0xffffffff\t\n"
-            "li     t2,0x8\t\n"
-            "xor    t2 , t1, t2 \t\n"
-            "csrr   t1, mstatus \t\n"
-            "and    t1 , t1, t2 \t\n"
-            "csrw   mstatus ,t1 \t\n" ::);
+      __asm volatile("csrc mstatus, %0" :: "r"(0x88) );
 }
 /**
  * @brief

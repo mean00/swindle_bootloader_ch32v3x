@@ -22,7 +22,7 @@ extern "C" void Logger_crash(const char *st)
  * @brief
  *
  */
-extern "C" void Logger_C(const char *fmt, ...)
+extern "C" int Logger_C(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
@@ -31,6 +31,7 @@ extern "C" void Logger_C(const char *fmt, ...)
     buffer[PRINT_BUFFER_SIZE] = 0;
     va_end(va);
     Logger_chars(strlen(buffer), buffer);
+    return 0;
 }
 /**
 

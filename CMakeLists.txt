@@ -1,13 +1,14 @@
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-SET(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 cmake_minimum_required(VERSION 3.13)
 MESSAGE(STATUS "==========================================")
 MESSAGE(STATUS "Starting swindle_bootloader_ch32v3x (ch32)")
 MESSAGE(STATUS "==========================================")
 
-OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
+OPTION(DEBUG_BUILD "Enable debugability" OFF)
+OPTION(VERBOSE_BUILD "Enable verbose" OFF)
 
 
 SET(MINI        ${CMAKE_SOURCE_DIR}/lnArduino_mini CACHE INTERNAL "")
@@ -39,7 +40,8 @@ SET(LN_ENABLE_SPI           FALSE CACHE INTERNAL "")
 IF(DEBUG_BUILD)
     ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6060")
 ELSE()
-    ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6030")
+    #ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6030")
+    ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6031")
 ENDIF()
 
 include(./mcuSelect.cmake)
@@ -62,11 +64,16 @@ enable_language(C CXX ASM) # this is important too!
 include_directories(${CMAKE_SOURCE_DIR}/override)
 
 IF(DEBUG_BUILD)
-    ADD_DEFINITIONS("-O0 -g3 -DDEBUG_BUILD")
+    ADD_DEFINITIONS("-O0 -g3 ")
     SET(TAG "_DEBUG" CACHE INTERNAL "")
 ELSE()
     ADD_DEFINITIONS("-Oz")
 ENDIF(DEBUG_BUILD)
+
+IF(VERBOSE_BUILD)
+    ADD_DEFINITIONS("-DVERBOSE_BUILD")
+ENDIF()
+
 #
 
 include_directories(lnArduino/)
@@ -96,7 +103,7 @@ SET(BL_SRCS
         ${MCU}/start.S
         CACHE INTERNAL ""
         )
-IF(DEBUG_BUILD)
+IF(VERBOSE_BUILD)
     SET(EXTRA             src/lnDebug_mini.cpp                   lnArduino/embedded_printf/printf.c        )
 ELSE()
     SET(EXTRA           src/lnDebug_empty.cpp       )

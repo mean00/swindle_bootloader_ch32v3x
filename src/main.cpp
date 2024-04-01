@@ -10,6 +10,26 @@ extern bool rebooted_into_dfu();
 extern void jumpIntoApp();
 extern void dfu();
 extern void clearRebootedIntoDfu();
+extern void lnIrqSysInit();
+extern void uartInit();
+extern void DisableIrqs();
+
+// This move the stack further
+uint8_t ucHeap[8*1024];
+
+//
+#if 0
+#define printC(...)                                                                                                    \
+    {                                                                                                                  \
+    }
+#define printCHex(...)                                                                                                 \
+    {                                                                                                                  \
+    }
+#else
+extern void printC(const char *c);
+extern void printCHex(const char *c, uint32_t val_in_hex);
+#endif
+
 
 void lnRunTimeInit()
 {
@@ -62,19 +82,32 @@ void disabled(const Peripherals periph)
 */
 bool bootloader()
 {
-
+    DisableIrqs();
+    // switch to higher clock
+    lnInitSystemClock();
+    // setup interrupts
+    lnIrqSysInit();
     // Activate GPIO B for now
+    lnPeripherals::enable(pGPIOA);
     lnPeripherals::enable(pGPIOB);
     lnPeripherals::enable(pGPIOC);
     lnPeripherals::enable(pAF);
+    lnPeripherals::enable(Peripherals::pUART0);
 
     // The LEDs are all on GPIO A
     resetMe(pGPIOA);
     resetMe(pGPIOB);
-    resetMe(pGPIOC);
+    resetMe(pGPIOC);    
+    resetMe(pAF); // We need alternate functions too
+//
+    uartInit();
+    printC("Checking FW\n");
+    lnPinMode(LED, lnOUTPUT);
+    lnPinMode(LED2, lnOUTPUT);
 
-    // We need alternate functions too
-    resetMe(pAF);
+    //
+    
+
 
     int go_dfu = false;
 #define NEXT_STEP(x)                                                                                                   \
@@ -84,11 +117,13 @@ bool bootloader()
     }
     NEXT_STEP(rebooted_into_dfu());
     NEXT_STEP(check_forced_dfu());
+    printC("Forced DFU!\n");
     if (!go_dfu)
     {
         int fw_ko = 0;
         if (!check_fw())
         {
+            printC("Hash Ko!\n");
             fw_ko = 1;
         }
         go_dfu |= fw_ko;

@@ -16,6 +16,7 @@
 #include "memory_config.h"
 #include "pinout.h"
 #include "usbd.h"
+extern __attribute__((section(".initial_heap"))) uint8_t ucHeap[8*1024];
 
 //
 #if 1
@@ -51,8 +52,6 @@ extern void systemReset();
 
 #define SysTicK_IRQn 12
 
-extern void uartInit();
-
 bool flashErase(uint32_t adr);
 bool flashWrite(uint32_t adr, const uint8_t *data, int size);
 uint32_t lnGetMs();
@@ -67,31 +66,20 @@ uint32_t rendezvous;
  *
  */
 void dfu()
-{
-    // switch to higher clock
-    lnInitSystemClock();
-
+{   
+    ucHeap[0]=0; // mark as used
     // sys tick
     setupSysTick();
-
-    // setup interrupts
-    lnIrqSysInit();
 
     // enable 48 Mhz
     lnPeripherals::enableUsb48Mhz();
 
     // enable USB
     lnPeripherals::enable(Peripherals::pUSBFS_OTG_CH32v3x);
-    lnPeripherals::enable(Peripherals::pUART0);
+    
 
     // enable sysTick
     _enableDisable_direct(true, SysTicK_IRQn);
-    //
-    lnPinMode(LED, lnOUTPUT);
-    lnPinMode(LED2, lnOUTPUT);
-
-    //
-    uartInit();
     printC("Going DFU\n");
     // enable interrupt globally
     EnableIrqs();

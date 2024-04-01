@@ -1,9 +1,10 @@
 
 # CFG_TUSB_OS == OPT_OS_FREERTOS
 
-SET(TUSB ${CMAKE_CURRENT_SOURCE_DIR}/lnArduino/libraries/tinyUsb/src/src)
-SET(LNSRC ${CMAKE_CURRENT_SOURCE_DIR}/lnArduino/libraries/tinyUsb/lnSrc)
-SET(CH32V3x_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/lnArduino/mcus/riscv_ch32v3x/tinyUsb/old)    
+SET(TUSB                ${CMAKE_CURRENT_SOURCE_DIR}/lnArduino/libraries/tinyUsb/src/src)
+SET(LNSRC               ${CMAKE_CURRENT_SOURCE_DIR}/lnArduino/libraries/tinyUsb/lnSrc)
+SET(CH32V3x_FOLDER      ${CMAKE_CURRENT_SOURCE_DIR}/lnArduino/mcus/riscv_ch32v3x/tinyUsb/old)    
+SET(CH32V3x_FOLDER_NEW  ${CMAKE_CURRENT_SOURCE_DIR}/lnArduino/mcus/riscv_ch32v3x/tinyUsb/new)    
 #include_directories(  ${CMAKE_CURRENT_SOURCE_DIR}/lnArduino/libraries/tinyUsb/private_include )
 #include_directories(  ${CMAKE_CURRENT_SOURCE_DIR}/lnArduino/libraries/tinyUsb/include )
 #include( ${LN_MCU_FOLDER}/tinyUsb/usb_setup.cmake)
@@ -46,9 +47,9 @@ ELSE() # New driver
                 )
     ELSE( )
         SET(DRIVERS     #${LNSRC}/lnUsbStack.cpp                        
-                        ${CH32V3x_FOLDER}/dcd_ch32_usbfs.c
-                        ${CH32V3x_FOLDER}/dcd_usbfs_platform.cpp
-                        ${CH32V3x_FOLDER}/../lnUsbStubs.cpp
+                        ${CH32V3x_FOLDER_NEW}/dcd_ch32_usbfs.c
+                        ${CH32V3x_FOLDER_NEW}/dcd_usbfs_platform.cpp
+                        ${CH32V3x_FOLDER_NEW}/../lnUsbStubs.cpp
                 )
     ENDIF()        
 
