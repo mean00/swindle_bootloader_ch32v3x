@@ -1,3 +1,8 @@
+/**
+ * \brief Small(ish) replacement for printf
+ *
+ */
+
 #include "lnArduino.h"
 #include "stdarg.h"
 void uartSend(const char *c);

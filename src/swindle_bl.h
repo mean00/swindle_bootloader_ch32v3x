@@ -19,6 +19,9 @@ extern void systemReset();
 
 extern void printC(const char *c);
 extern void printCHex(const char *c, uint32_t val_in_hex);
+extern "C" void SysTick_Stop(void) ;
+extern "C" void clockDefault();
+extern void uartDeinit();
 
 bool flashErase(uint32_t adr);
 bool flashWrite(uint32_t adr, const uint8_t *data, int size);

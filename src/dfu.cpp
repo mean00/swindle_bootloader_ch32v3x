@@ -31,13 +31,11 @@
 
 /**
  */
-
+#define BLINK_PERIOD 200
 
 static bool led = false;
 static uint32_t rendezvous;
-
-
-uint32_t target_address;
+static uint32_t target_address;
 
 
 /**
@@ -63,13 +61,13 @@ void dfu()
 
     // board_init();
     tud_init(0);
-    rendezvous = lnGetMs() + 200;
-    while (1)
+    rendezvous = lnGetMs() + BLINK_PERIOD;
+    while (true)
     {
         tud_task(); // tinyusb device task
         if (lnGetMs() > rendezvous)
         {
-            rendezvous += 200;
+            rendezvous += BLINK_PERIOD;
             lnDigitalWrite(LED, led);
             lnDigitalWrite(LED2, led);
             led = !led;
@@ -87,7 +85,7 @@ void dfu()
  */
 bool flashErase(uint32_t adr)
 {
-    if (adr < 8 * 1024) // dont write the bootloader
+    if (adr < (FLASH_BOOTLDR_SIZE_KB * 1024)) // dont write the bootloader
     {
         printC("Dont erase the BL!\n");
         return false;

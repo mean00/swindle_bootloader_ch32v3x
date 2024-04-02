@@ -1,3 +1,8 @@
+/**
+ * \brief : Check the (xx)hash of the fw
+ *
+ *
+ */
 #include "lnArduino.h"
 #include "memory_config.h"
 #include "xxhash.h"

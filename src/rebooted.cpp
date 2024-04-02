@@ -1,15 +1,16 @@
+/**
+ *
+ */
+
 #include "lnArduino.h"
 #include "memory_config.h"
 #include "pinout.h"
 #include "swindle_bl.h"
-// Points to the bottom of the stack, we should have 8 bytes free there
-extern uint32_t __msp_init;
-uint64_t *marker = (uint64_t *)0x0000000020000000; // marker is at the beginning
 
-extern "C" void SysTick_Stop(void) ;
-extern "C" void clockDefault();
-extern void uartDeinit();
 #define MARKER_DFU 0xDEADBEEFCC00FFEEULL
+// Points to the bottom of the stack, we should have 8 bytes free there
+static uint64_t *marker = (uint64_t *)0x0000000020000000; // marker is at the beginning
+
 /**
  * @brief put the marker to force reboot to dfu
  * 
@@ -48,20 +49,21 @@ void clearRebootedIntoDfu()
 }
 
 /**
+ * \brief jump into the application, reverto to ~ post reset state
  */
-extern void DisableIrqs();
 void jumpIntoApp()
 {
     // Switch on the LEDS before jumping
     lnPinMode(LED, lnOUTPUT);
     lnPinMode(LED2, lnOUTPUT);
-    lnDigitalWrite(LED, 0);
-    lnDigitalWrite(LED2, 0);
+    lnDigitalWrite(LED, false);
+    lnDigitalWrite(LED2, false);
     // there must be a simpler way...
     DisableIrqs();
     SysTick_Stop();
     uartDeinit();
     lnDisableInterrupt(LN_IRQ_SYSTICK);    
+    lnDisableInterrupt(LN_IRQ_OTG_FS);
     // disable FPU etc..
     asm volatile("csrw 0x804, x0\n"); // INTSYSCR : hw stack etc...
     clockDefault();
