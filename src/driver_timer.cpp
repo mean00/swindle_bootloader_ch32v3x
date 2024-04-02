@@ -18,17 +18,6 @@
    #define LN_IRQ_FOS  __attribute__((interrupt))
 #endif
 
-
-#define STUBME(x)                                                                                                      \
-    void x()                                                                                                           \
-    {                                                                                                                  \
-        xAssert(0);                                                                                                    \
-    }
-#define STUBME_C(x)                                                                                                    \
-    extern "C" void x()                                                                                                \
-    {                                                                                                                  \
-        xAssert(0);                                                                                                    \
-    }
 /**  */
 typedef struct
 {
@@ -42,7 +31,7 @@ typedef struct
 
 /**
  */
-volatile int sysTick = 0;
+static volatile int sysTick = 0;
 /**
  * @brief
  *

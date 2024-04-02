@@ -37,21 +37,33 @@ SET(LN_ENABLE_I2C           FALSE CACHE INTERNAL "")
 SET(LN_ENABLE_SPI           FALSE CACHE INTERNAL "")
 
 
+include(./mcuSelect.cmake)
+ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DUSE_CH32v3x_HW_IRQ_STACK=1 -DARCH_FPU=1 -DLN_MCU_SPEED=${LN_MCU_SPEED} -DPRINTF_DISABLE_SUPPORT_FLOAT -isystem ${CMAKE_SOURCE_DIR}/override)
+
+
 IF(DEBUG_BUILD)
     ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6060")
-ELSE()
-    #ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6030")
+    ADD_DEFINITIONS("-O0 -g3 ")
+    SET(TAG "_DEBUG" CACHE INTERNAL "")
+
+ELSE()    
     ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6031")
+    ADD_DEFINITIONS("-Oz")
 ENDIF()
 
-include(./mcuSelect.cmake)
+IF(VERBOSE_BUILD)
+    ADD_DEFINITIONS("-DVERBOSE_BUILD")
+    SET(EXTRA             src/lnDebug_mini.cpp                   lnArduino/embedded_printf/printf.c        )
+ELSE()
+    SET(EXTRA           src/lnDebug_empty.cpp       )
+ENDIF()        
 
 include_directories(${MINI}/override)
 # Update paths
 IF(USE_CLANG)
     SET(xCMAKE_TOOLCHAIN_FILE ${MCU}/toolchain_clang.cmake)    
     configure_file( "${MINI}/clang_ram_offset_by_8.lld.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
-ELSE(USE_CLANG)
+ELSE(USE_CLANG) # This is not really supported
     SET(xCMAKE_TOOLCHAIN_FILE ${MCU}/toolchain.cmake)
     configure_file( "${MINI}/ld_ram_offset_by_8.lds.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
 ENDIF(USE_CLANG)
@@ -61,34 +73,20 @@ include(${xCMAKE_TOOLCHAIN_FILE})
 PROJECT(swindle_bootloader_ch32v3x NONE) # the NONE is very important !
 enable_language(C CXX ASM) # this is important too!
 
-include_directories(${CMAKE_SOURCE_DIR}/override)
-
-IF(DEBUG_BUILD)
-    ADD_DEFINITIONS("-O0 -g3 ")
-    SET(TAG "_DEBUG" CACHE INTERNAL "")
-ELSE()
-    ADD_DEFINITIONS("-Oz")
-ENDIF(DEBUG_BUILD)
-
-IF(VERBOSE_BUILD)
-    ADD_DEFINITIONS("-DVERBOSE_BUILD")
-ENDIF()
-
 #
-
-include_directories(lnArduino/)
-#include_directories(lnArduino/include)
-include_directories(lnArduino/arduinoLayer/include)
+include_directories(${CMAKE_SOURCE_DIR}/override)
+include_directories( lnArduino/)
+include_directories( lnArduino/arduinoLayer/include)
+include_directories( lnArduino/private_include )
 include_directories( ${MCU}/include )
 include_directories( ${MCU}/private_include )
-include_directories( lnArduino/private_include )
 include_directories( ${MINI} )
 include_directories( ${MINI}/include )
 include_directories( ${CMAKE_SOURCE_DIR})
 include_directories( ${CMAKE_SOURCE_DIR}/include)
 
 
-ADD_DEFINITIONS(-DUSE_CH32v3x_HW_IRQ_STACK=1 -DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=${LN_MCU_SPEED} -DPRINTF_DISABLE_SUPPORT_FLOAT -isystem ${CMAKE_SOURCE_DIR}/override)
+
 ADD_SUBDIRECTORY( ${MINI} )
 SET(BL_SRCS 
         src/main.cpp    
@@ -100,22 +98,15 @@ SET(BL_SRCS
         src/driver_uart.cpp
         src/driver_timer.cpp
         src/driver_interrupt.cpp
+        src/stubs_lowlevel.cpp
         ${MCU}/start.S
         CACHE INTERNAL ""
         )
-IF(VERBOSE_BUILD)
-    SET(EXTRA             src/lnDebug_mini.cpp                   lnArduino/embedded_printf/printf.c        )
-ELSE()
-    SET(EXTRA           src/lnDebug_empty.cpp       )
-ENDIF()        
-
 
 
 include(./tiny.cmake)
 
 target_link_libraries(tinyUsb miniArduino)
-
-
 
 ADD_EXECUTABLE(swindle_bootloader_ch32v3x ${BL_SRCS} ${EXTRA})
 TARGET_LINK_LIBRARIES(swindle_bootloader_ch32v3x  tinyUsb )
@@ -147,9 +138,11 @@ ENDIF()
 IF(DEBUG_BUILD)
     MESSAGE(STATUS "          DEBUG BUILD")
 ENDIF()
+IF(VERBOSE_BUILD)
+    MESSAGE(STATUS "          VERBOSE BUILD")
+ENDIF()
 
-
-set_target_properties(swindle_bootloader_ch32v3x PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x${COMPILER}${TAG} )
+set_target_properties(swindle_bootloader_ch32v3x PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x_${COMPILER}${TAG} )
 POSTPROCESS( swindle_bootloader_ch32v3x )
 
 #

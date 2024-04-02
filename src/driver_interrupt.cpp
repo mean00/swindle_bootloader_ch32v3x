@@ -14,18 +14,6 @@
 
 #include "lnRCU_priv.h"
 
-#define STUBME(x)                                                                                                      \
-    void x()                                                                                                           \
-    {                                                                                                                  \
-        xAssert(0);                                                                                                    \
-    }
-#define STUBME_C(x)                                                                                                    \
-    extern "C" void x()                                                                                                \
-    {                                                                                                                  \
-        xAssert(0);                                                                                                    \
-    }
-
-STUBME_C(SW_Handler)
 /**
  * @brief
  *
@@ -69,26 +57,9 @@ void __attribute__((noreturn)) do_assert(const char *a)
     while (1)
         __asm__("nop");
 }
-/**
- * @brief
- *
- */
-void LN_INTERRUPT_TYPE xxxOTG_FS_IRQHandler()
-{
-}
 
 /**
- * @brief
- *
- * @param a
- * @param b
- */
-void dmaIrqHandler(int a, int b)
-{
-    xAssert(0);
-}
-/**
- * @brief
+ * @brief reset the system
  *
  */
 void systemReset()
@@ -101,7 +72,7 @@ void systemReset()
     }
 }
 /**
- * @brief 
+ * @brief revert the clocks to after reset
  * 
  */
 extern LN_RCU *arcu;
