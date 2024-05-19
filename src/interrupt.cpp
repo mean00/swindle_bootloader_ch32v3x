@@ -46,12 +46,16 @@ void EnableIrqs()
 }
 void DisableIrqs()
 {
-    __asm__("li     t1,0xffffffff\t\n"
-            "li     t2,0x8\t\n"
-            "xor    t2 , t1, t2 \t\n"
+    __asm__(
             "csrr   t1, mstatus \t\n"
-            "and    t1 , t1, t2 \t\n"
+            "xori   t1 , t1, 0x8 \t\n"
             "csrw   mstatus ,t1 \t\n" ::);
+}
+
+void disableSysTick()
+{
+    // setup sys tick
+    SysTick->CTLR = 0;
 }
 
 void setupSysTick()
