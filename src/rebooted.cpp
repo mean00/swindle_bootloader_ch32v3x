@@ -68,6 +68,6 @@ void jumpIntoApp()
     asm volatile("csrw 0x804, x0\n"); // INTSYSCR : hw stack etc...
     clockDefault();
     __asm__( 
-        "lui t0, 0x4\t\n"
-        "jalr x0,0(t0)\n" ::);
+        "lui ra, 0x4\t\n"
+        "ret\n" ::);
 }
