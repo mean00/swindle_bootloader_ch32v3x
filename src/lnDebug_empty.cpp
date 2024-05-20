@@ -14,7 +14,12 @@ void uartSend(const char *c);
  */
 void printCHex(const char *c, uint32_t hex)
 {
-            uartSend(c);
+
+}
+extern "C" int Logger_C(const char *c, ...)
+{
+      uartSend(c);
+      return 0;
 }
 /**
  * @brief
@@ -22,8 +27,8 @@ void printCHex(const char *c, uint32_t hex)
  */
 extern "C" void Logger_crash(const char *st)
 {
-            uartSend("** CRASH **\n");
-            uartSend(st);
+      uartSend("** CRASH **\n");
+      uartSend(st);
 }
 
 /**

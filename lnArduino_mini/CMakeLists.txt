@@ -2,7 +2,8 @@
 include_directories( ${MCU}/include )
 ADD_DEFINITIONS("-DIRQn_Type=uint32_t")
 ADD_LIBRARY(miniArduino STATIC
-    ${MCU}/src/lnCpuID_riscv_ch32v3x.cpp
+  #${MCU}/src/lnCpuID_riscv_ch32v3x.cpp
+    override/lnCpuID_riscv_ch32v3x.cpp
     ${MCU}/src/lnFMC_impl.cpp
     ${MCU}/src/lnIRQ_riscv_ch32v3x.cpp
     ${MCU}/src/lnBoot_riscv_ch32.cpp

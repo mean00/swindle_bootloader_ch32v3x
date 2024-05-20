@@ -10,6 +10,8 @@ MESSAGE(STATUS "==========================================")
 OPTION(DEBUG_BUILD "Enable debugability" OFF)
 OPTION(VERBOSE_BUILD "Enable verbose" OFF)
 
+#SET(DEBUG_BUILD ON CACHE Internal "")
+#SET(VERBOSE_BUILD ON CACHE Internal "")
 
 SET(MINI        ${CMAKE_SOURCE_DIR}/lnArduino_mini CACHE INTERNAL "")
 SET(AF_FOLDER   ${CMAKE_SOURCE_DIR}/lnArduino CACHE INTERNAL "")
@@ -75,6 +77,7 @@ enable_language(C CXX ASM) # this is important too!
 
 #
 include_directories(${CMAKE_SOURCE_DIR}/override)
+include_directories( lnArduino/include)
 include_directories( lnArduino/)
 include_directories( lnArduino/arduinoLayer/include)
 include_directories( lnArduino/private_include )
