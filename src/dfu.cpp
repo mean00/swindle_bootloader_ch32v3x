@@ -87,9 +87,8 @@ void dfu()
     // enable sysTick
     _enableDisable_direct(true, SysTicK_IRQn);
     //
-    lnPinMode(LED, lnOUTPUT);
-    lnPinMode(LED2, lnOUTPUT);
-    lnPinMode(LED3, lnOUTPUT);
+    for (int i = 0; i < NB_LEDS; i++)
+        lnPinMode(ledPins[i], lnOUTPUT);
 
     //
     uartInit();
@@ -106,9 +105,8 @@ void dfu()
         if (lnGetMs() > rendezvous)
         {
             rendezvous += 200;
-            lnDigitalWrite(LED, led);
-            lnDigitalWrite(LED2, led);
-            lnDigitalWrite(LED3, led);
+            for (int i = 0; i < NB_LEDS; i++)
+                lnDigitalWrite(ledPins[i], led);
             led = !led;
         }
         // led_blinking_task();

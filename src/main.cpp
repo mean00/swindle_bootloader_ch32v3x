@@ -36,11 +36,15 @@ extern "C" void vPortExitCritical()
  */
 bool check_forced_dfu()
 {
-    lnPinMode(FORCED_DFU_PIN, lnINPUT_PULLUP);
-    for (int i = 0; i < 10; i++) // wait  a bit
-        __asm__("nop");
-    if (!lnDigitalRead(FORCED_DFU_PIN)) // "OK" Key pressed
-        return true;
+    for (int i = 0; i < NB_DFUS; i++)
+    {
+        const lnPin pin = dfuPins[i];
+        lnPinMode(pin, lnINPUT_PULLUP);
+        for (int i = 0; i < 10; i++) // wait  a bit
+            __asm__("nop");
+        if (!lnDigitalRead(pin)) // "OK" Key pressed
+            return true;
+    }
     return false;
 }
 /**
