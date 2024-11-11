@@ -10,9 +10,10 @@ The downloaded application must be linked to be at 0x4000 (i.e. base +16 kB)
 There are several ways to enter DFU:
 
 - There is a signature in ram upon reboot (0xDEADBEEFCC00FFEEULL at the beginning of RAM)
-- The pin PB2 is pulled down to ground
+- The pin PB7 or PB14 is pulled down to ground
 - The signature of the main firmware is invalid
-
+  
+While in DFU, the leds connected to PB13, PC13 and/or PA8 will blink
 
 Firmware signature
 ------------------
