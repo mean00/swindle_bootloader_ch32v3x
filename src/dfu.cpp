@@ -89,6 +89,7 @@ void dfu()
     //
     lnPinMode(LED, lnOUTPUT);
     lnPinMode(LED2, lnOUTPUT);
+    lnPinMode(LED3, lnOUTPUT);
 
     //
     uartInit();
@@ -107,6 +108,7 @@ void dfu()
             rendezvous += 200;
             lnDigitalWrite(LED, led);
             lnDigitalWrite(LED2, led);
+            lnDigitalWrite(LED3, led);
             led = !led;
         }
         // led_blinking_task();
@@ -177,49 +179,48 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
     int er = DFU_STATUS_OK;
     switch (block_num)
     {
-    case 0: {
-        if (length < 5)
+        case 0:
         {
-            printC("Incorrect len\n");
-            er = DFU_STATUS_ERR_UNKNOWN;
-            break;
-        }
-        uint32_t address = data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24);
-        switch (data[0])
-        {
-        case 0x41: // erase
-        {
-            if (!flashErase(address))
-                er = DFU_STATUS_ERR_ERASE;
-            break;
-        }
-        case 0x21: // set address
-        {
-            printC("setAdr\n");
-            target_address = address;
-            // return;
-            break;
+            if (length < 5)
+            {
+                printC("Incorrect len\n");
+                er = DFU_STATUS_ERR_UNKNOWN;
+                break;
+            }
+            uint32_t address = data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24);
+            switch (data[0])
+            {
+                case 0x41: // erase
+                {
+                    if (!flashErase(address))
+                        er = DFU_STATUS_ERR_ERASE;
+                    break;
+                }
+                case 0x21: // set address
+                {
+                    printC("setAdr\n");
+                    target_address = address;
+                    // return;
+                    break;
+                }
+                break;
+                default:
+                    printC("CMD Err\n");
+                    er = DFU_STATUS_ERR_UNKNOWN;
+                    break;
+            }
         }
         break;
+        case 1: printC("Block1 CB\n"); break;
         default:
-            printC("CMD Err\n");
-            er = DFU_STATUS_ERR_UNKNOWN;
+            printC("other CB\n");
+            uint32_t adr = target_address + (block_num - 2) * CFG_TUD_DFU_XFER_BUFSIZE;
+            if (!flashWrite(adr, data, length))
+            {
+                printC("Flash Err\n");
+                er = DFU_STATUS_ERR_WRITE;
+            }
             break;
-        }
-    }
-    break;
-    case 1:
-        printC("Block1 CB\n");
-        break;
-    default:
-        printC("other CB\n");
-        uint32_t adr = target_address + (block_num - 2) * CFG_TUD_DFU_XFER_BUFSIZE;
-        if (!flashWrite(adr, data, length))
-        {
-            printC("Flash Err\n");
-            er = DFU_STATUS_ERR_WRITE;
-        }
-        break;
     }
     tud_dfu_finish_flashing(er);
 }
