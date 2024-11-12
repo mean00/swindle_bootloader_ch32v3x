@@ -644,7 +644,7 @@ void dcd_int_handler(uint8_t rhport)
             txSet(0, USBOTG_EP_RES_NACK);
             rxSet(0, USBOTG_EP_RES_ACK);
             ep0_tx_tog = 1;
-            ep0_rx_tog = 0;
+            ep0_rx_tog = 1;
             dcd_event_setup_received(0, getBufferAddress(0, false), true);
             break;
         default:
