@@ -99,7 +99,7 @@ bool bootloader()
     }
     clearRebootedIntoDfu();
 
-    // go_dfu = true;
+    go_dfu = true;
 
     if (go_dfu == false)
     {

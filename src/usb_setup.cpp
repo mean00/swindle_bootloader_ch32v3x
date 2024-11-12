@@ -35,7 +35,7 @@ tusb_desc_device_t const desc_device = {
 
     .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
 
-    .idVendor = 0x1d50,
+    .idVendor = 0x1d51,
     .idProduct = LN_ID_PRODUCT,
     .bcdDevice = 0x0100,
 

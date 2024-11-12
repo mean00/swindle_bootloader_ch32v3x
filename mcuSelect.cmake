@@ -9,7 +9,7 @@ IF(NOT DEFINED LN_ARCH)
 
     SET(LN_ARCH "RISCV"                   CACHE INTERNAL "")
     SET(LN_MCU  "CH32V3x"                 CACHE INTERNAL "")
-    SET(LN_MCU_RAM_SIZE       64          CACHE INTERNAL "")
+    SET(LN_MCU_RAM_SIZE       32          CACHE INTERNAL "")
     SET(LN_MCU_FLASH_SIZE     256         CACHE INTERNAL "")
     SET(LN_MCU_STATIC_RAM     8           CACHE INTERNAL "")
     SET(LN_SPEC               "picolibc"  CACHE INTERNAL "") # if not set we use nano
