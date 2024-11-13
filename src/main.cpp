@@ -10,7 +10,7 @@ extern bool rebooted_into_dfu();
 extern void jumpIntoApp();
 extern void dfu();
 extern void clearRebootedIntoDfu();
-
+#if 0
 void lnRunTimeInit()
 {
 }
@@ -33,6 +33,21 @@ extern "C" void vPortExitCritical()
     deadEnd(0);
 }
 /**
+ *
+ * @return
+ */
+
+void resetMe(const Peripherals periph)
+{
+    lnPeripherals::reset(periph);
+    lnPeripherals::enable(periph);
+}
+void disabled(const Peripherals periph)
+{
+    lnPeripherals::disable(periph);
+}
+#endif
+/**
  */
 bool check_forced_dfu()
 {
@@ -48,25 +63,11 @@ bool check_forced_dfu()
     return false;
 }
 /**
- *
- * @return
- */
-
-void resetMe(const Peripherals periph)
-{
-    lnPeripherals::reset(periph);
-    lnPeripherals::enable(periph);
-}
-void disabled(const Peripherals periph)
-{
-    lnPeripherals::disable(periph);
-}
-/**
 
 */
 bool bootloader()
 {
-
+#if 0
     // Activate GPIO B for now
     lnPeripherals::enable(pGPIOB);
     lnPeripherals::enable(pGPIOC);
@@ -79,7 +80,7 @@ bool bootloader()
 
     // We need alternate functions too
     resetMe(pAF);
-
+#endif
     int go_dfu = false;
 #define NEXT_STEP(x)                                                                                                   \
     {                                                                                                                  \
@@ -114,8 +115,13 @@ bool bootloader()
  *
  * @return int
  */
-int main()
+// int main()
+void setup()
 {
     bootloader();
+}
+void loop()
+{
+    xAssert(0);
 }
 //--

@@ -2,7 +2,7 @@
  *  (C) 2021 MEAN00 fixounet@free.fr
  *  See license file
  */
-
+#if 0
 #include "lnArduino.h"
 #include "stdarg.h"
 
@@ -87,4 +87,5 @@ void printC(const char *c)
 {
     uartSend_C(c);
 }
+#endif
 // EOF

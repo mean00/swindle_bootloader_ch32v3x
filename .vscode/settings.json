@@ -10,7 +10,7 @@
     ],
     "cmake.generator": "Unix Makefiles",
     "cortex-debug.variableUseNaturalFormat": false,
-    "riscv_gdb" : "/riscv/tools5/bin/riscv32-unknown-elf-gdb",    
+    "riscv_gdb" : "/riscv/tools7/bin/riscv32-unknown-elf-gdb",    
     "riscv_openocd_path" : "/opt/wch/MounRiver_Studio_Community_Linux_x64_V160/MRS_Community/toolchain/OpenOCD/bin",
     "armToolchainPath" : "/arm/xpack-arm-none-eabi-gcc-12.3.1-1.2/bin/",
 

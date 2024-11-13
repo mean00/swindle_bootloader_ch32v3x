@@ -35,18 +35,20 @@
     {                                                                                                                  \
     }
 #else
-extern void printC(const char *c);
-extern void printCHex(const char *c, uint32_t val_in_hex);
+// extern void printC(const char *c);
+// extern void printCHex(const char *c, uint32_t val_in_hex);
+#define printC Logger
+#define printCHex Logger
 #endif
 
 char _ctype_b[10];
 
 /**
  */
-extern void lnIrqSysInit();
+// extern void lnIrqSysInit();
 extern void _enableDisable_direct(bool enableDisable, const int &irq_num);
-extern void setupSysTick();
-extern void EnableIrqs();
+// extern void setupSysTick();
+// extern void EnableIrqs();
 extern void systemReset();
 
 #define SysTicK_IRQn 12
@@ -69,32 +71,32 @@ uint32_t rendezvous;
 void dfu()
 {
     // switch to higher clock
-    lnInitSystemClock();
+    // lnInitSystemClock();
 
     // sys tick
-    setupSysTick();
+    // setupSysTick();
 
     // setup interrupts
-    lnIrqSysInit();
+    // lnIrqSysInit();
 
     // enable 48 Mhz
     lnPeripherals::enableUsb48Mhz();
 
     // enable USB
     lnPeripherals::enable(Peripherals::pUSBFS_OTG_CH32v3x);
-    lnPeripherals::enable(Peripherals::pUART0);
+    // lnPeripherals::enable(Peripherals::pUART0);
 
     // enable sysTick
-    _enableDisable_direct(true, SysTicK_IRQn);
+    //_enableDisable_direct(true, SysTicK_IRQn);
     //
     for (int i = 0; i < NB_LEDS; i++)
         lnPinMode(ledPins[i], lnOUTPUT);
 
     //
-    uartInit();
+    // uartInit();
     printC("Going DFU\n");
     // enable interrupt globally
-    EnableIrqs();
+    // EnableIrqs();
 
     // board_init();
     tud_init(0);
@@ -222,6 +224,13 @@ extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t con
         break;
     }
     tud_dfu_finish_flashing(er);
+}
+/*
+ *
+ */
+void systemReset(void)
+{
+    xAssert(0);
 }
 
 /**

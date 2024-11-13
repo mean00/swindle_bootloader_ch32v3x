@@ -3,51 +3,63 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [              
-           {
-            "name": "riscv_BMP",
+    "configurations": [                         
+         {
+            "name": "riscv-RAM (pico)",
             "type": "gdb",
             "request": "launch",
             "cwd": "${workspaceRoot}",
-            "target": "${workspaceRoot}/build/lnBMP_BL_CH32V3x_CLANG.elf",
-            "gdbpath" : "${config:riscv_gdb}",        
+            "target": "${workspaceRoot}/build/swindle_bootloader_ch32v3x_CLANG_DEBUG.elf",
+            "gdbpath" : "${config:riscv_gdb}",   
+            "breakAfterReset"      : "true",
+            //"showDevDebugOutput" : "true", 
+            //"runToEntryPoint" : "true",
             "autorun": [        
-            "target extended-remote /dev/ttyBmpGdb2",
+            "target extended-remote /dev/ttyBmpGdb3",
             "set confirm off",
             "set mem inaccessible-by-default off",
             "set  architecture riscv:rv32",
-            "set remotetimeout unlimited",           
+            "set remotetimeout unlimited",    
+            "mon reset",
             "mon rvswdp_scan",
             "attach 1",
-            "load ",
-            "tb main ",
-            "b deadEnd "
-            ]
+            "load ",    
+            "compare-sections",            
+            "hb deadEnd ",               
+            "hb main"
+            //"set $mtvec = 0x20000000",
+            
+            ],
          },
          {
-            "name": "riscv_attach_BMP",
+            "name": "riscv-RAM GCC (pico)",
             "type": "gdb",
             "request": "launch",
             "cwd": "${workspaceRoot}",
-            "target": "${workspaceRoot}/build/lnBMP_BL_CH32V3x_CLANG.elf",
-            "gdbpath" : "${config:riscv_gdb}",        
+            "target": "${workspaceRoot}/build/swindle_bootloader_ch32v3x_GCC_DEBUG.elf",
+            "gdbpath" : "${config:riscv_gdb}",   
+            "breakAfterReset"      : "true",
+            //"showDevDebugOutput" : "true", 
+            //"runToEntryPoint" : "true",
             "autorun": [        
-            "target extended-remote localhost:2000",
+            "target extended-remote /dev/ttyBmpGdb3",
             "set confirm off",
             "set mem inaccessible-by-default off",
             "set  architecture riscv:rv32",
-            "set remotetimeout unlimited",
-            "set remote hardware-breakpoint-limit 4",
-            "set remote hardware-watchpoint-limit 0", 
+            "set remotetimeout unlimited",    
+            "mon reset",
             "mon rvswdp_scan",
             "attach 1",
-            //"mon halt",
-            //"interrupt",            
-           // "mon swreset 1",
-           // "set $pc=0 ",
-            "tb main ",
-            "b deadEnd "
-            ]
-         },        
+            "load ",    
+            "compare-sections",            
+            //"hb deadEnd ",               
+            "hb main",
+            "set $pc=0x0000000",
+            //"set \$pc=0x20000000",
+            //"set $mtvec = 0x20000000",
+            
+            ],
+         },
+           
     ]
 }

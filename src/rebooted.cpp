@@ -40,7 +40,7 @@ void jumpIntoApp()
     lnDigitalWrite(LED, 0);
     lnDigitalWrite(LED2, 0);
     // there must be a simpler way...
-    DisableIrqs();
+//    DisableIrqs();
 #define JUMP                                                                                                           \
     "lui t0, 0x4\t\n"                                                                                                  \
     "jalr x0,0(t0)\n"
