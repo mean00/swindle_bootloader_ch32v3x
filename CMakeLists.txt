@@ -10,7 +10,9 @@ MESSAGE(STATUS "================================")
 OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
 include(./build_default.cmake)
 
-#SET(DEBUG_BUILD ON CACHE INTERNAL "")
+SET(LN_DISABLE_LOGGER_UART TRUE CACHE Internal "")
+SET(LN_DISABLE_FLOAT_PRINTF TRUE CACHE Internal "")
+SET(LN_DISABLE_DEFAULT_IRQ_TABLE TRUE CACHE Internal "")
 
 
 MACRO(POSTPROCESS target)
@@ -76,6 +78,8 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 ADD_SUBDIRECTORY(${AF_FOLDER})
 
 INCLUDE(${AF_FOLDER}/setup.cmake)
+INCLUDE_DIRECTORIES(${AF_FOLDER}/private_include)
+
 USE_LIBRARY(tinyUsb)
 
 # Update paths
@@ -89,16 +93,16 @@ IF(FALSE)
   ENDIF(USE_CLANG)
 ENDIF()
 
+ADD_DEFINITIONS("-DARCH_FPU=1")
 
 IF(DEBUG_BUILD)
   ADD_DEFINITIONS("-O0 -g3 -DDEBUG_BUILD")
   SET(TAG "_DEBUG" CACHE INTERNAL "")
-  include_directories(embedded_printf)
+  
 ELSE()
   ADD_DEFINITIONS("-Oz")
 ENDIF(DEBUG_BUILD)
 #
-#ADD_DEFINITIONS(-DconfigTOTAL_HEAP_SIZE=16000 -DLN_MCU_SPEED=48000000)
 SET(SRCS
         src/main.cpp
         src/hash_check.cpp
@@ -106,34 +110,14 @@ SET(SRCS
         src/rebooted.cpp
         src/dfu.cpp
         src/usb_setup.cpp
-        #src/driver_uart.cpp
-        #src/driver_timer.cpp
-        #src/driver_interrupt.cpp
-        #lnArduino_mini/ch32_src/start.S
+        src/logger_override.cpp
+        src/interrupt_override.cpp
         )
-IF(DEBUG_BUILD)
-  SET(EXTRA             src/lnDebug_mini.cpp                   embedded_printf/printf.c        )
-ELSE()
-  SET(EXTRA           src/lnDebug_empty.cpp       )
-ENDIF()
 
 
-#ADD_SUBDIRECTORY(tinyUsb)
-
-#target_link_libraries(tinyUsb miniArduino)
-
-SET(T ${CMAKE_SOURCE_DIR}/tinyUsb/src/src)
-
-include_directories( ${T}/src/device)
-include_directories( ${T}/src/)
-include_directories( ${T}/../)
 
 GENERATE_GD32_FIRMWARE( swindle_bootloader_ch32v3x_ ${LNA} ${SRCS} ${EXTRA} )
-#TARGET_LINK_LIBRARIES(swindle_bootloader_ch32v3x_ miniArduino tinyUsb)
-#TARGET_LINK_OPTIONS(swindle_bootloader_ch32v3x_  PRIVATE "-T${CMAKE_BINARY_DIR}/linker_script.ld" )
-#--
-#POSTPROCESS( swindle_bootloader_ch32v3x_ )
-#
+target_link_libraries( swindle_bootloader_ch32v3x_ lnArduino )
 #
 #
 SET(TGT_NAME "CH32V3x")
@@ -162,7 +146,5 @@ IF(DEBUG_BUILD)
   MESSAGE(STATUS "          DEBUG BUILD")
 ENDIF()
 
-
 set_target_properties(swindle_bootloader_ch32v3x_ PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x_${COMPILER}${TAG} )
-
 #
