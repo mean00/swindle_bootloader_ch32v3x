@@ -19,6 +19,8 @@ void setup()
     {
         lnDelay(100);
     }
+    // Minimal setup
+
     // Do we need to go dfu ?
     if (check_status() == false)
     {
@@ -28,6 +30,7 @@ void setup()
             lnDelay(100);
         }
     }
+    // full setup
     go_dfu();
 }
 /*

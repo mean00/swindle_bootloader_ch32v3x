@@ -9,7 +9,7 @@
  * Points to the bottom of the stack, we should have 8 bytes free there
  */
 extern uint32_t __msp_init;
-uint64_t *marker = (uint64_t *)0x0000000020000000; // marker is at the beginning
+uint64_t *marker = (uint64_t *)0x0000000020000000ULL; // marker is at the beginning
 extern bool check_fw();
 
 /*
@@ -44,33 +44,33 @@ static bool check_forced_dfu()
     }
     return false;
 }
-/**
 
-*/
-bool check_status()
-{
-    int go_dfu = false;
 #define NEXT_STEP(x)                                                                                                   \
     {                                                                                                                  \
         if (!go_dfu)                                                                                                   \
             go_dfu |= (int)x;                                                                                          \
     }
+
+/**
+
+*/
+bool check_status()
+{
+    int go_dfu = 0;
     NEXT_STEP(rebooted_into_dfu());
     NEXT_STEP(check_forced_dfu());
     if (!go_dfu)
     {
-        int fw_ko = 0;
         if (!check_fw())
         {
-            fw_ko = 1;
+            go_dfu |= 4;
         }
-        go_dfu |= fw_ko;
     }
     clear_reboot_flags();
     //-- Force status
-    go_dfu = true;
+    go_dfu = 1;
     //--
-    return go_dfu;
+    return go_dfu != 0;
 }
 
 //--
