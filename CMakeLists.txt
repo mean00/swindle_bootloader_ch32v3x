@@ -67,6 +67,7 @@ SET(LN_USB_DFU 1 CACHE INTERNAL "")
 
 SET(LN_USB_BUFFER_SIZE 256 CACHE INTERNAL "") # increase usb cdc buff
 
+SET(LN_FREERTOS_CONFIG_DIR ${CMAKE_SOURCE_DIR}/src/freertos_config CACHE INTERNAL "")
 
 PROJECT(swindle_ch32_bootloader NONE) # the NONE is very important !
 
@@ -98,7 +99,7 @@ ADD_DEFINITIONS("-DARCH_FPU=1")
 IF(DEBUG_BUILD)
   ADD_DEFINITIONS("-O0 -g3 -DDEBUG_BUILD")
   SET(TAG "_DEBUG" CACHE INTERNAL "")
-  
+
 ELSE()
   ADD_DEFINITIONS("-Oz")
 ENDIF(DEBUG_BUILD)
@@ -107,11 +108,13 @@ SET(SRCS
         src/main.cpp
         src/hash_check.cpp
         src/xxhash.c
-        src/rebooted.cpp
-        src/dfu.cpp
+        #src/rebooted.cpp
+        #src/dfu.cpp
         src/usb_setup.cpp
         src/logger_override.cpp
         src/interrupt_override.cpp
+        src/check_status.cpp
+        src/go_dfu.cpp
         )
 
 
