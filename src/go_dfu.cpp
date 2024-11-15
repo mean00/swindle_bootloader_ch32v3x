@@ -41,53 +41,23 @@
 #define printCHex Logger
 #endif
 
-char _ctype_b[10];
-
-/**
- */
-// extern void lnIrqSysInit();
-extern void _enableDisable_direct(bool enableDisable, const int &irq_num);
-// extern void setupSysTick();
-// extern void EnableIrqs();
-extern void systemReset();
-
-#define SysTicK_IRQn 12
-
-extern void uartInit();
-
-bool flashErase(uint32_t adr);
-bool flashWrite(uint32_t adr, const uint8_t *data, int size);
-uint32_t lnGetMs();
-
 uint32_t target_address;
-
 bool led = false;
 uint32_t rendezvous;
+
+char _ctype_b[10];
 
 /**
  * @brief
  *
  */
-void dfu()
+bool go_dfu()
 {
-    // switch to higher clock
-    // lnInitSystemClock();
-
-    // sys tick
-    // setupSysTick();
-
-    // setup interrupts
-    // lnIrqSysInit();
-
     // enable 48 Mhz
     lnPeripherals::enableUsb48Mhz();
 
     // enable USB
     lnPeripherals::enable(Peripherals::pUSBFS_OTG_CH32v3x);
-    // lnPeripherals::enable(Peripherals::pUART0);
-
-    // enable sysTick
-    //_enableDisable_direct(true, SysTicK_IRQn);
     //
     for (int i = 0; i < NB_LEDS; i++)
         lnPinMode(ledPins[i], lnOUTPUT);

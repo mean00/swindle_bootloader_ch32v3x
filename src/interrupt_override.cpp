@@ -39,15 +39,27 @@ void _enableDisable_direct(bool enableDisable, const int &irq_num);
 extern "C" void Logger_crash(const char *st);
 #define FAST_UNUSED 0xFF00
 //---------------------------------------------------
-const uint32_t size_of_vec_table = 2;
-const uint32_t vecTable[2] __attribute__((aligned(32))){
-    0,
-    0,
-};
-uint8_t vec_revert_table[2];
+#define NB_INTERRUPTS 100
+const uint32_t size_of_vec_table = NB_INTERRUPTS;
+uint32_t vecTable[NB_INTERRUPTS] __attribute__((aligned(32))){};
+uint8_t vec_revert_table[NB_INTERRUPTS];
 uint16_t fastInterrupt[4] = {FAST_UNUSED, FAST_UNUSED, FAST_UNUSED, FAST_UNUSED};
 CH32V3_INTERRUPT *pfic = (CH32V3_INTERRUPT *)LN_PFIC_ADR;
 
+int erException = 0;
+/**
+ */
+static void invalid_exception()
+{
+    xAssert(0);
+}
+#define ER_X(c)                                                                                                        \
+    static void invalid_exception##c()                                                                                 \
+    {                                                                                                                  \
+        erException = c;                                                                                               \
+        xAssert(0);                                                                                                    \
+    }
+#define VEC_X(c) SET_INTERRUPT(c, (uint32_t)invalid_exception##c)
 // Attribute [LEVEL1:LEVEL0][SHV] :
 //      LEVEL:
 //              0:0=LEVEL,
@@ -60,6 +72,18 @@ CH32V3_INTERRUPT *pfic = (CH32V3_INTERRUPT *)LN_PFIC_ADR;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+ER_X(2)
+ER_X(80)
+ER_X(81)
+ER_X(82)
+ER_X(83)
+ER_X(84)
+ER_X(85)
+ER_X(86)
+ER_X(87)
+ER_X(88)
+ER_X(89)
+ER_X(90)
 
 // API used by the freeRTOS port
 
@@ -96,6 +120,12 @@ ISR_CODE static int lookupIrq(int irq)
     }
     return 0;
 }
+extern "C"
+{
+    extern void SysTick_Handler();
+    extern void SW_Handler();
+    extern void OTG_FS_IRQHandler();
+}
 
 /**
  * @brief
@@ -119,8 +149,30 @@ ISR_CODE void lnIrqSysInit()
         pfic->IPRIOIR[i] = prio32;
     }
     //
+    for (int i = 0; i < NB_INTERRUPTS; i++)
+    {
+        vecTable[i] = (uint32_t)invalid_exception;
+    }
+    //
+#define SET_INTERRUPT(nb, handler) vecTable[nb] = (uint32_t)handler;
+    SET_INTERRUPT(0, invalid_exception);
+    SET_INTERRUPT(12, SysTick_Handler);
+    SET_INTERRUPT(14, SW_Handler);
 
-    ;
+    VEC_X(80)
+    VEC_X(81)
+    VEC_X(82)
+    VEC_X(83)
+    VEC_X(84)
+    VEC_X(85)
+    VEC_X(86)
+    VEC_X(87)
+    VEC_X(88)
+    VEC_X(89)
+    VEC_X(90)
+    VEC_X(2)
+
+    SET_INTERRUPT(83, OTG_FS_IRQHandler);
     // Prepare invert able
     for (int i = 0; i < size_of_vec_table; i++)
     {
