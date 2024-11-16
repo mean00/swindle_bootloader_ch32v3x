@@ -15,10 +15,6 @@ extern void go_dfu();
 */
 void setup()
 {
-    while (1)
-    {
-        lnDelay(100);
-    }
     // Minimal setup
 
     // Do we need to go dfu ?
@@ -37,6 +33,12 @@ void setup()
 
 */
 void loop()
+{
+    xAssert(0);
+}
+/*
+ */
+extern "C" void vTaskDelete(TaskHandle_t x)
 {
     xAssert(0);
 }

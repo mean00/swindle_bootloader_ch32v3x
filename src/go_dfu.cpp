@@ -13,10 +13,12 @@
 #include "lnFMC.h"
 #include "lnGPIO.h"
 #include "lnPeripherals.h"
+#include "lnUSBD.h"
+#include "lnUsbDFU.h"
+#include "lnUsbStack.h"
 #include "memory_config.h"
 #include "pinout.h"
 #include "usbd.h"
-
 //
 #if 0
 #define LNFMC_ERASE lnFMC::erase
@@ -26,26 +28,127 @@
 #define LNFMC_WRITE(...) true
 #endif
 
-//
-#if 0
-#define printC(...)                                                                                                    \
-    {                                                                                                                  \
-    }
-#define printCHex(...)                                                                                                 \
-    {                                                                                                                  \
-    }
-#else
-// extern void printC(const char *c);
-// extern void printCHex(const char *c, uint32_t val_in_hex);
 #define printC Logger
 #define printCHex Logger
-#endif
-
+static void dfu_download_cb(/*uint8_t alt,*/ uint32_t block_num, uint8_t const *data, uint32_t length);
 uint32_t target_address;
 bool led = false;
 uint32_t rendezvous;
 
 char _ctype_b[10];
+
+//--------------------------------------------------------------------+
+// Configuration Descriptor
+//--------------------------------------------------------------------+
+#define ALT_COUNT 1
+enum
+{
+    ITF_NUM_DFU_MODE,
+    ITF_NUM_TOTAL
+};
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_DFU_DESC_LEN(ALT_COUNT))
+
+#define FUNC_ATTRS (DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_MANIFESTATION_TOLERANT)
+
+uint8_t const desc_configuration[] = {
+    // Config number, interface count, string index, total length, attribute, power in mA
+    TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
+
+    // Interface number, Alternate count, starting string index, attributes, detach timeout, transfer size
+    TUD_DFU_DESCRIPTOR(ITF_NUM_DFU_MODE, ALT_COUNT, 4, FUNC_ATTRS, 1000, CFG_TUD_DFU_XFER_BUFSIZE),
+};
+//--------------------------------------------------------------------+
+// String Descriptors
+//--------------------------------------------------------------------+
+
+// array of pointer to string descriptors
+char const *string_desc_arr[] = {
+    (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
+    "lnBMP",                    // 1: Manufacturer
+    "lnBMP CH32-DFU",           // 2: Product
+    "123456",                   // 3: Serials, should use chip ID
+    FLASH_DFU_STRING,
+    //"lnBMP_FW",                       // 4: DFU Partition 1
+};
+//--------------------------------------------------------------------+
+// Device Descriptors
+//--------------------------------------------------------------------+
+tusb_desc_device_t const desc_device = {.bLength = sizeof(tusb_desc_device_t),
+                                        .bDescriptorType = TUSB_DESC_DEVICE,
+                                        .bcdUSB = 0x0200,
+                                        .bDeviceClass = 0x00,
+                                        .bDeviceSubClass = 0x00,
+                                        .bDeviceProtocol = 0x00,
+                                        .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
+                                        .idVendor = 0x1d50,
+                                        .idProduct = LN_ID_PRODUCT,
+                                        .bcdDevice = 0x0100,
+                                        .iManufacturer = 0x01,
+                                        .iProduct = 0x02,
+                                        .iSerialNumber = 0x03,
+                                        .bNumConfigurations = 0x01};
+
+/**
+ */
+static void helloUsbEvent(void *cookie, lnUsbStack::lnUsbStackEvents event)
+{
+}
+
+/**
+ * @brief flash write
+ *
+ */
+void dfu_download_cb(/*uint8_t alt,*/ uint32_t block_num, uint8_t const *data, uint32_t length)
+{
+    int er = DFU_STATUS_OK;
+    switch (block_num)
+    {
+    case 0: {
+        if (length < 5)
+        {
+            printC("Incorrect len\n");
+            er = DFU_STATUS_ERR_UNKNOWN;
+            break;
+        }
+        uint32_t address = data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24);
+        switch (data[0])
+        {
+        case 0x41: // erase
+        {
+            if (!LNFMC_ERASE(address))
+                er = DFU_STATUS_ERR_ERASE;
+            break;
+        }
+        case 0x21: // set address
+        {
+            printC("setAdr\n");
+            target_address = address;
+            // return;
+            break;
+        }
+        break;
+        default:
+            printC("CMD Err\n");
+            er = DFU_STATUS_ERR_UNKNOWN;
+            break;
+        }
+    }
+    break;
+    case 1:
+        printC("Block1 CB\n");
+        break;
+    default:
+        printC("other CB\n");
+        uint32_t adr = target_address + (block_num - 2) * CFG_TUD_DFU_XFER_BUFSIZE;
+        if (!LNFMC_WRITE(adr, data, length))
+        {
+            printC("Flash Err\n");
+            er = DFU_STATUS_ERR_WRITE;
+        }
+        break;
+    }
+    tud_dfu_finish_flashing(er);
+}
 
 /**
  * @brief
@@ -53,37 +156,21 @@ char _ctype_b[10];
  */
 bool go_dfu()
 {
-    // enable 48 Mhz
-    lnPeripherals::enableUsb48Mhz();
-
-    // enable USB
-    lnPeripherals::enable(Peripherals::pUSBFS_OTG_CH32v3x);
     //
-    for (int i = 0; i < NB_LEDS; i++)
-        lnPinMode(ledPins[i], lnOUTPUT);
-
+    lnPinMode(LED, lnOUTPUT);
+    Logger("Going DFU 1\n");
     //
-    // uartInit();
-    printC("Going DFU\n");
-    // enable interrupt globally
-    // EnableIrqs();
-
-    // board_init();
-    tud_init(0);
-    rendezvous = lnGetMs() + 200;
+    lnUsbStack *usb = new lnUsbStack;
+    usb->init(5, string_desc_arr);
+    usb->setConfiguration(desc_configuration, desc_configuration, &desc_device, NULL);
+    usb->setEventHandler(NULL, helloUsbEvent);
+    lnUsbDFU::addDFURTCb(&dfu_download_cb);
+    usb->start();
     while (1)
     {
-        tud_task(); // tinyusb device task
-        if (lnGetMs() > rendezvous)
-        {
-            rendezvous += 200;
-            for (int i = 0; i < NB_LEDS; i++)
-                lnDigitalWrite(ledPins[i], led);
-            led = !led;
-        }
-        // led_blinking_task();
+        lnDelayMs(500);
+        lnDigitalToggle(LED);
     }
-    deadEnd(0);
 }
 /**
  * @brief
@@ -138,99 +225,5 @@ bool flashWrite(uint32_t adr, const uint8_t *data, int size)
         }
     }
     return correct;
-}
-
-/**
- * @brief flash write
- *
- */
-extern "C" void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const *data, uint16_t length)
-{
-    int er = DFU_STATUS_OK;
-    switch (block_num)
-    {
-    case 0: {
-        if (length < 5)
-        {
-            printC("Incorrect len\n");
-            er = DFU_STATUS_ERR_UNKNOWN;
-            break;
-        }
-        uint32_t address = data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24);
-        switch (data[0])
-        {
-        case 0x41: // erase
-        {
-            if (!flashErase(address))
-                er = DFU_STATUS_ERR_ERASE;
-            break;
-        }
-        case 0x21: // set address
-        {
-            printC("setAdr\n");
-            target_address = address;
-            // return;
-            break;
-        }
-        break;
-        default:
-            printC("CMD Err\n");
-            er = DFU_STATUS_ERR_UNKNOWN;
-            break;
-        }
-    }
-    break;
-    case 1:
-        printC("Block1 CB\n");
-        break;
-    default:
-        printC("other CB\n");
-        uint32_t adr = target_address + (block_num - 2) * CFG_TUD_DFU_XFER_BUFSIZE;
-        if (!flashWrite(adr, data, length))
-        {
-            printC("Flash Err\n");
-            er = DFU_STATUS_ERR_WRITE;
-        }
-        break;
-    }
-    tud_dfu_finish_flashing(er);
-}
-/*
- *
- */
-void systemReset(void)
-{
-    xAssert(0);
-}
-
-/**
- * @brief
- *
- */
-extern "C" void tud_dfu_detach_cb(void)
-{
-    printC("Detach CB\n");
-    // do reset
-    // CH32V2x and CH32V3x reset the system by
-    // setting the SYSRESET bit in the interrupt configuration register (PFIC_CFGR) to 1, or by setting the
-    // SYSRESET bit in the PFIC_SCTLR
-    systemReset();
-}
-/*
-    Called AFTER the flashing has been done
-*/
-extern "C" void tud_dfu_manifest_cb(uint8_t alt)
-{
-    printC("Manifest CB\n");
-    // nothing to do..
-    tud_dfu_detach_cb();
-}
-/**
- * @brief
- *
- */
-extern "C" uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state)
-{
-    return 10; // ??
 }
 // EOF

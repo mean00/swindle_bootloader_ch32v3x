@@ -12,7 +12,28 @@ include(./build_default.cmake)
 
 SET(LN_DISABLE_LOGGER_UART TRUE CACHE Internal "")
 SET(LN_DISABLE_FLOAT_PRINTF TRUE CACHE Internal "")
-SET(LN_DISABLE_DEFAULT_IRQ_TABLE TRUE CACHE Internal "")
+#SET(LN_DISABLE_DEFAULT_IRQ_TABLE TRUE CACHE Internal "")
+SET(LN_FREERTOS_CONFIG_DIR ${CMAKE_SOURCE_DIR}/src/freertos_config CACHE INTERNAL "")
+
+
+SET(LN_ENABLE_USBD  TRUE  CACHE INTERNAL "")
+SET(LN_ENABLE_I2C   FALSE CACHE INTERNAL "")
+SET(LN_ENABLE_SPI   FALSE CACHE INTERNAL "")
+SET(LN_ENABLE_UART  FALSE  CACHE INTERNAL "")
+SET(LN_ENABLE_RUST  FALSE  CACHE INTERNAL "")
+
+# Target CH32V303
+SET(USE_CH32v3x_USB_OTG     True CACHE INTERNAL "")
+SET(USE_CH32V3x             True CACHE INTERNAL "")
+
+# tiny USB configuration
+SET(LN_USB_NB_CDC 0) # 2 CDC interfaces
+SET(LN_USB_NB_HID 0) # No HID
+SET(LN_USB_DFU_RUNTIME 0 CACHE INTERNAL "")
+SET(LN_USB_DFU 1 CACHE INTERNAL "")
+
+SET(LN_USB_BUFFER_SIZE  CACHE INTERNAL "") # increase usb cdc buff
+
 
 
 MACRO(POSTPROCESS target)
@@ -30,47 +51,21 @@ MACRO(POSTPROCESS target)
     )
 ENDMACRO(POSTPROCESS target)
 
-# Target CH32V303
-SET(USE_CH32v3x_USB_OTG     True CACHE INTERNAL "")
-SET(USE_CH32V3x             True CACHE INTERNAL "")
-SET(LN_ENABLE_USBD          True CACHE INTERNAL "")
-SET(LN_ENABLE_I2C           FALSE CACHE INTERNAL "")
-SET(LN_ENABLE_SPI           FALSE CACHE INTERNAL "")
-
 
 IF(DEBUG_BUILD)
-  ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6060")
+  ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6160")
 ELSE()
   ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6030")
 ENDIF()
 
-
-
-SET(MINI ${CMAKE_SOURCE_DIR}/lnArduino_mini)
 SET(AF_FOLDER  ${CMAKE_SOURCE_DIR}/lnArduino)
-
 include(./mcuSelect.cmake)
 SET(CMAKE_TOOLCHAIN_FILE ${AF_FOLDER}/lnArduino.cmake)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${AF_FOLDER}/cmake CACHE INTERNAL "")
 
-SET(LN_ENABLE_USBD  TRUE  CACHE INTERNAL "")
-SET(LN_ENABLE_I2C   FALSE CACHE INTERNAL "")
-SET(LN_ENABLE_SPI   FALSE CACHE INTERNAL "")
-SET(LN_ENABLE_UART  FALSE  CACHE INTERNAL "")
-SET(LN_ENABLE_RUST  FALSE  CACHE INTERNAL "")
 
-# tiny USB configuration
-SET(LN_USB_NB_CDC 0) # 2 CDC interfaces
-SET(LN_USB_NB_HID 0) # No HID
-SET(LN_USB_DFU_RUNTIME 0 CACHE INTERNAL "")
-SET(LN_USB_DFU 1 CACHE INTERNAL "")
-
-SET(LN_USB_BUFFER_SIZE 256 CACHE INTERNAL "") # increase usb cdc buff
-
-SET(LN_FREERTOS_CONFIG_DIR ${CMAKE_SOURCE_DIR}/src/freertos_config CACHE INTERNAL "")
 
 PROJECT(swindle_ch32_bootloader NONE) # the NONE is very important !
-
 ENABLE_LANGUAGE(C CXX ASM) # this is important too!
 # Generate version
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
@@ -79,9 +74,11 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 ADD_SUBDIRECTORY(${AF_FOLDER})
 
 INCLUDE(${AF_FOLDER}/setup.cmake)
+USE_LIBRARY(tinyUsb)
+include(${AF_FOLDER}/libraries/tinyUsb/tiny.cmake)
+
 INCLUDE_DIRECTORIES(${AF_FOLDER}/private_include)
 
-USE_LIBRARY(tinyUsb)
 
 # Update paths
 IF(FALSE)
@@ -94,12 +91,11 @@ IF(FALSE)
   ENDIF(USE_CLANG)
 ENDIF()
 
-ADD_DEFINITIONS("-DARCH_FPU=1")
+ADD_DEFINITIONS("-DARCH_FPU=0")
 
 IF(DEBUG_BUILD)
-  ADD_DEFINITIONS("-O0 -g3 -DDEBUG_BUILD")
+  ADD_DEFINITIONS("-O1 -g3 -DDEBUG_BUILD")
   SET(TAG "_DEBUG" CACHE INTERNAL "")
-
 ELSE()
   ADD_DEFINITIONS("-Oz")
 ENDIF(DEBUG_BUILD)
@@ -107,20 +103,17 @@ ENDIF(DEBUG_BUILD)
 SET(SRCS
         src/main.cpp
         src/hash_check.cpp
-        src/xxhash.c
-        #src/rebooted.cpp
-        #src/dfu.cpp
-        src/usb_setup.cpp
-        src/logger_override.cpp
-        src/interrupt_override.cpp
+        src/xxhash.c        
+        src/logger_override.cpp        
         src/check_status.cpp
         src/go_dfu.cpp
         )
 
+#src/usb_setup.cpp
+#src/interrupt_override.cpp
 
-
-GENERATE_GD32_FIRMWARE( swindle_bootloader_ch32v3x_ ${LNA} ${SRCS} ${EXTRA} )
-target_link_libraries( swindle_bootloader_ch32v3x_ lnArduino )
+GENERATE_GD32_FIRMWARE( swindle_bootloader_ch32v3x ${LNA} ${SRCS} ${EXTRA} )
+target_link_libraries( swindle_bootloader_ch32v3x lnArduino )
 #
 #
 SET(TGT_NAME "CH32V3x")
@@ -149,5 +142,5 @@ IF(DEBUG_BUILD)
   MESSAGE(STATUS "          DEBUG BUILD")
 ENDIF()
 
-set_target_properties(swindle_bootloader_ch32v3x_ PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x_${COMPILER}${TAG} )
+set_target_properties(swindle_bootloader_ch32v3x PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x_${COMPILER}${TAG} )
 #
