@@ -105,7 +105,33 @@
             
             ],
          },
-           
+         {
+            "name": "riscv-RAM Clang (pico)",
+            "type": "gdb",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "target": "${workspaceRoot}/build/swindle_bootloader_ch32v3x_CLANG_DEBUG.elf",
+            "gdbpath" : "${config:riscv_gdb}",   
+            "breakAfterReset"      : "true",
+            //"showDevDebugOutput" : "true",             
+            "autorun": [        
+            "target extended-remote /dev/ttyBmpGdb3",
+            "set confirm off",
+            "set mem inaccessible-by-default off",
+            "set  architecture riscv:rv32",
+            "set remotetimeout unlimited",    
+            "mon reset",
+            "mon rvswdp_scan",
+            "attach 1",
+            "load ",    
+            "compare-sections",   
+            "hb *0"         ,    
+            "tb main"        ,
+            "r",
+            "echo set $pc=0x20000000",
+            "echo d",
+            ],
+         },
     ]
 }
 
