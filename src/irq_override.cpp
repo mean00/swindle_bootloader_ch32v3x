@@ -44,6 +44,8 @@ struct CH32V3_INTERRUPTx
 };
 typedef volatile CH32V3_INTERRUPTx CH32V3_INTERRUPT;
 
+extern "C" void dcd_int_handler(int rh);
+
 #ifdef USE_CH32v3x_HW_IRQ_STACK
 #define LOCAL_LN_INTERRUPT_TYPE
 #define WCH_HW_STACK CH32_SYSCR_HWSTKEN
@@ -62,13 +64,23 @@ CH32V3_INTERRUPT *pfic = (CH32V3_INTERRUPT *)LN_PFIC_ADR;
 
 uint32_t vecTable[SIZE_OF_VEC_TABLE] __attribute__((aligned(32)));
 uint8_t vec_revert_table[SIZE_OF_VEC_TABLE];
+extern "C" void dcd_int_handler(int x);
 
+extern "C" __attribute__((weak)) __attribute__((used)) void otg_call()
+{
+    dcd_int_handler(0);
+}
 #define RELAY_FUNC(x)                                                                                                  \
-    ISR_CODE extern "C" void __attribute__((naked)) x##_relay()                                                        \
+    extern "C" void __attribute__((naked)) x##_relay()                                                                 \
     {                                                                                                                  \
         __asm__("jal " #x "\n"                                                                                         \
                 "mret");                                                                                               \
     }
+extern "C" void __attribute__((naked)) otg_relay()
+{
+    __asm__("jal otg_call\n"
+            "mret\n");
+}
 /**
  *
  */
@@ -79,7 +91,6 @@ extern "C" void Logger_crash(const char *st);
 //---- Relay func
 #ifdef USE_CH32v3x_HW_IRQ_STACK
 RELAY_FUNC(SysTick_Handler)
-RELAY_FUNC(OTG_FS_IRQHandler)
 #endif
 
 //---------------------------------------------------------------------
@@ -136,8 +147,8 @@ ISR_CODE void lnIrqSysInit()
         vecTable[i] = (uint32_t)oops;
     vecTable[12] = (uint32_t)SysTick_Handler_relay;
     vecTable[14] = (uint32_t)SW_Handler;
-    vecTable[67] = (uint32_t)OTG_FS_IRQHandler_relay;
-    vecTable[83] = (uint32_t)OTG_FS_IRQHandler_relay;
+    vecTable[67] = (uint32_t)otg_relay;
+    vecTable[83] = (uint32_t)otg_relay;
     for (int i = 0; i < 4; i++)
     {
         pfic->VTFIDR[i] = 0;
