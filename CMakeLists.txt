@@ -39,7 +39,7 @@ SET(LN_USB_BUFFER_SIZE  CACHE INTERNAL "") # increase usb cdc buff
 
 IF(USE_CH32v3x_PURE_RAM)
 ELSE()
-SET(LN_CUSTOM_LD_SCRIPT ${CMAKE_SOURCE_DIR}/ldscript/clang.lld )
+  SET(LN_CUSTOM_LD_SCRIPT ${CMAKE_SOURCE_DIR}/ldscript/clang.lld )
 ENDIF()
 
 MACRO(POSTPROCESS target)
@@ -166,6 +166,10 @@ ENDIF()
 IF(DEBUG_BUILD)
   MESSAGE(STATUS "          DEBUG BUILD")
 ENDIF()
-
+#
+IF(USE_CH32v3x_PURE_RAM)
+  SET(TAG "${TAG}_ram")
+ENDIF()
+#
 set_target_properties(swindle_bootloader_ch32v3x PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x_${COMPILER}${TAG} )
 #

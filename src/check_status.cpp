@@ -13,19 +13,13 @@ uint64_t *marker = (uint64_t *)0x0000000020000000ULL; // marker is at the beginn
 extern bool check_fw();
 
 /*
- * Clears reboot information so we reboot in "normal" mode
- */
-static void clear_reboot_flags()
-{
-    *marker = 0;
-}
-
-/*
  * Returns whether we were rebooted into DFU mode
  */
 static bool rebooted_into_dfu()
 {
-    return (*marker == 0xDEADBEEFCC00FFEEULL);
+    bool rebooted = (*marker == 0xDEADBEEFCC00FFEEULL);
+    *marker = 0;
+    return rebooted;
 }
 
 /**
@@ -66,7 +60,7 @@ bool check_status()
             go_dfu |= 4;
         }
     }
-    clear_reboot_flags();
+
     //-- Force status
     go_dfu = 1;
     //--

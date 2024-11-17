@@ -17,10 +17,12 @@
 #include "lnUsbDFU.h"
 #include "lnUsbStack.h"
 #include "memory_config.h"
+
 #include "pinout.h"
+
 #include "usbd.h"
 //
-#if 0
+#if 1
 #define LNFMC_ERASE lnFMC::erase
 #define LNFMC_WRITE lnFMC::write
 #else
@@ -28,14 +30,16 @@
 #define LNFMC_WRITE(...) true
 #endif
 
-#define printC Logger
-#define printCHex Logger
+#define printC(...)                                                                                                    \
+    {                                                                                                                  \
+    }
+#define printCHex(...)                                                                                                 \
+    {                                                                                                                  \
+    }
+
 static void dfu_download_cb(/*uint8_t alt,*/ uint32_t block_num, uint8_t const *data, uint32_t length);
 uint32_t target_address;
 bool led = false;
-uint32_t rendezvous;
-
-char _ctype_b[10];
 
 //--------------------------------------------------------------------+
 // Configuration Descriptor
@@ -115,7 +119,7 @@ void dfu_download_cb(/*uint8_t alt,*/ uint32_t block_num, uint8_t const *data, u
         {
         case 0x41: // erase
         {
-            if (!LNFMC_ERASE(address))
+            if (!LNFMC_ERASE(address, 1)) // erase 1 KB
                 er = DFU_STATUS_ERR_ERASE;
             break;
         }
@@ -156,8 +160,11 @@ void dfu_download_cb(/*uint8_t alt,*/ uint32_t block_num, uint8_t const *data, u
  */
 bool go_dfu()
 {
-    //
-    lnPinMode(LED, lnOUTPUT);
+    for (int i = 0; i < NB_LEDS; i++)
+    {
+        lnPinMode(ledPins[i], lnOUTPUT);
+    }
+
     Logger("Going DFU 1\n");
     //
     lnUsbStack *usb = new lnUsbStack;
@@ -169,7 +176,10 @@ bool go_dfu()
     while (1)
     {
         lnDelayMs(500);
-        lnDigitalToggle(LED);
+        for (int i = 0; i < NB_LEDS; i++)
+        {
+            lnDigitalToggle(ledPins[i]);
+        }
     }
 }
 /**

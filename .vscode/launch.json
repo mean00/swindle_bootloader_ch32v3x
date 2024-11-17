@@ -97,7 +97,7 @@
             "type": "gdb",
             "request": "launch",
             "cwd": "${workspaceRoot}",
-            "target": "${workspaceRoot}/build/swindle_bootloader_ch32v3x_CLANG_DEBUG.elf",
+            "target": "${workspaceRoot}/build/swindle_bootloader_ch32v3x_CLANG_DEBUG_ram.elf",
             "gdbpath" : "${config:riscv_gdb}",   
             "breakAfterReset"      : "true",
             //"showDevDebugOutput" : "true",             
