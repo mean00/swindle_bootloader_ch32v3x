@@ -11,6 +11,37 @@
 #include "lnIRQ.h"
 #include "lnIRQ_riscv_priv_ch32v3x.h"
 #include "lnRCU.h"
+/**
+ * @brief
+ *
+ */
+struct CH32V3_INTERRUPTx
+{
+    uint32_t ISR[4];     // 0x00 Interrupt Enable Status Register
+    uint32_t dummy0[4];  // 0x10
+    uint32_t IPR[4];     // 0x20 Interrupt Pending Status Register
+    uint32_t dummy1[4];  // 0x30
+    uint32_t ITHRESHOLD; // 0x40 Interrupt priority Threshold configuration register
+    uint32_t dummy2;
+    uint32_t CFGR;     // 0x48 Interrupt Configuration Register
+    uint32_t GISR;     // 0x4C Global Status Register
+    uint8_t VTFIDR[4]; // 0x50 VTF Interrupt ID configuration Register vector to assign to that fast vector
+    uint32_t dummy3[3];
+    uint32_t VTFADDR[4]; // 0x60 VTD Interrupt Address Register
+    uint32_t dummy4[(0x100 - 0x70) / 4];
+    uint32_t IENR[4]; // 0x100 Interrupt Enable Set Register
+    uint32_t dummy5[(0x180 - 0x110) / 4];
+    uint32_t IRER[4]; // 0x180 Interrupt Enable Reset Register
+    uint32_t dummy6[(0x200 - 0x190) / 4];
+    uint32_t IPSR[4]; // 0x200 Interrupt Pending Set Register
+    uint32_t dummy7[(0x280 - 0x210) / 4];
+    uint32_t IPRR[4]; // 0x280 Interrupt Pending Reset Register
+    uint32_t dummy8[(0x300 - 0x290) / 4];
+    uint32_t IACTR[4]; // 0x300 Interrupt Activation Register
+    uint32_t dummy9[(0x400 - 0x310) / 4];
+    uint32_t IPRIOIR[64]; // 0x400 Priority(0..63)
+};
+typedef volatile CH32V3_INTERRUPTx CH32V3_INTERRUPT;
 
 #ifdef USE_CH32v3x_HW_IRQ_STACK
 #define HANDLER_DESC(x)                                                                                                \
@@ -30,7 +61,7 @@ extern "C" void unsupported_relay();
 #endif
 #define HANDLER_DESC_RAW(y) extern "C" void y() LOCAL_LN_INTERRUPT_TYPE;
 
-#include "local_interrupt_table.h"
+// #include "local_interrupt_table.h"
 /**
  *
  */
@@ -121,7 +152,7 @@ extern "C" void unsupported_relay();
 #include "lnIRQ.h"
 #include "lnIRQ_riscv_priv_ch32v3x.h"
 #include "lnRCU.h"
-#include "local_interrupt_table.h"
+// #include "local_interrupt_table.h"
 #define size_of_vec_table 100
 
 /**
