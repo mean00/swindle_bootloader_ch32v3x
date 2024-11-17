@@ -29,7 +29,7 @@ extern "C" void unsupported_relay();
 #endif
 #define HANDLER_DESC_RAW(y) extern "C" void y() LOCAL_LN_INTERRUPT_TYPE;
 
-#include "ch32v3x_interrupt_table.h"
+#include "local_interrupt_table.h"
 /**
  *
  */
@@ -45,31 +45,6 @@ extern "C" void __attribute__((noinline)) unsupported()
     deadEnd(11);
 }
 /**
- * @brief
- *
- */
-void LOCAL_LN_INTERRUPT_TYPE HardFault()
-{
-    deadEnd(12);
-}
-/**
- * @brief
- *
- */
-void LOCAL_LN_INTERRUPT_TYPE HardFault_relay()
-{
-    deadEnd(12);
-}
-
-#define unsupported_no_decl(y)                                                                                         \
-    static void unsupported_##y()                                                                                      \
-    {                                                                                                                  \
-        deadEnd(y);                                                                                                    \
-    }
-#define unsupported_no(y) unsupported_##y
-
-unsupported_no_decl(1) unsupported_no_decl(2) unsupported_no_decl(3) unsupported_no_decl(4) unsupported_no_decl(5)
-    unsupported_no_decl(6) unsupported_no_decl(7) unsupported_no_decl(8)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -86,8 +61,8 @@ unsupported_no_decl(1) unsupported_no_decl(2) unsupported_no_decl(3) unsupported
 #define UNSUPPORTED_NO(y) (uint32_t)unsupported_##y
 
 #define VECTOR_TABLE __attribute__((section(".vector_table")))
-    //--
-    extern VECTOR_TABLE const uint32_t vecTable[] __attribute__((aligned(32)));
+//--
+extern VECTOR_TABLE const uint32_t vecTable[] __attribute__((aligned(32)));
 VECTOR_TABLE const uint32_t vecTable[] __attribute__((aligned(32))) = {LIST_OF_INTERRUPTS};
 //--
 #define SIZE_OF_VEC_TABLE sizeof(vecTable) / sizeof(uint32_t)
@@ -104,11 +79,6 @@ uint8_t vec_revert_table[SIZE_OF_VEC_TABLE];
     }
 
 WEAK_INTERRUPT(USB_WAKEUP_IRQHandler)
-WEAK_INTERRUPT(USB_TX_IRQHandler)
-WEAK_INTERRUPT(USB_RX_IRQHandler)
-WEAK_INTERRUPT(USBHS_IRQHandler)
-WEAK_INTERRUPT(USART1_IRQHandler)
-WEAK_INTERRUPT(USART2_IRQHandler)
 WEAK_INTERRUPT(OTG_FS_IRQHandler)
 
 #define RELAY_FUNC(x)                                                                                                  \
@@ -122,31 +92,9 @@ WEAK_INTERRUPT(OTG_FS_IRQHandler)
 //---- Relay func
 #ifdef USE_CH32v3x_HW_IRQ_STACK
 RELAY_FUNC(USART0_IRQHandler)
-RELAY_FUNC(USART1_IRQHandler)
-RELAY_FUNC(USART2_IRQHandler)
-RELAY_FUNC(I2C1_EV_IRQHandler)
-RELAY_FUNC(I2C1_ERR_IRQHandler)
-RELAY_FUNC(I2C0_EV_IRQHandler)
-RELAY_FUNC(I2C0_ERR_IRQHandler)
-RELAY_FUNC(Break_Point_Handler)
 RELAY_FUNC(SysTick_Handler)
 RELAY_FUNC(OTG_FS_IRQHandler)
-RELAY_FUNC(USBHS_IRQHandler)
 RELAY_FUNC(unsupported)
-RELAY_DMA(0, 0)
-RELAY_DMA(0, 1)
-RELAY_DMA(0, 2)
-RELAY_DMA(0, 3)
-RELAY_DMA(0, 4)
-RELAY_DMA(0, 5)
-RELAY_DMA(0, 6)
-RELAY_DMA(1, 0)
-RELAY_DMA(1, 1)
-RELAY_DMA(1, 2)
-RELAY_DMA(1, 3)
-RELAY_DMA(1, 4)
-RELAY_DMA(1, 5)
-RELAY_DMA(1, 6)
 
 #endif
 // EOF

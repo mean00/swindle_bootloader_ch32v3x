@@ -25,11 +25,11 @@ extern "C" void unsupported_relay();
 #endif
 
 #include "ch32v30x_isr_helper.h"
-#include "ch32v3x_interrupt_table.h"
 #include "lnArduino.h"
 #include "lnIRQ.h"
 #include "lnIRQ_riscv_priv_ch32v3x.h"
 #include "lnRCU.h"
+#include "local_interrupt_table.h"
 
 /**
  *
@@ -53,42 +53,6 @@ CH32V3_INTERRUPT *pfic = (CH32V3_INTERRUPT *)LN_PFIC_ADR;
 //              0 non vectored
 //              1 vectored
 //
-
-#ifdef LN_ENABLE_I2C
-void i2cIrqHandler(int instance, bool error);
-#else
-#define i2cIrqHandler(...) deadEnd(1)
-#endif
-
-//--
-ISR_CODE extern "C" void LOCAL_LN_INTERRUPT_TYPE I2C0_EV_IRQHandler(void)
-{
-    i2cIrqHandler(0, false);
-}
-/**
- * @brief
- *
- */
-ISR_CODE extern "C" void LOCAL_LN_INTERRUPT_TYPE I2C0_ERR_IRQHandler(void)
-{
-    i2cIrqHandler(0, true);
-}
-/**
- * @brief
- *
- */
-ISR_CODE extern "C" void LOCAL_LN_INTERRUPT_TYPE I2C1_EV_IRQHandler(void)
-{
-    i2cIrqHandler(1, false);
-}
-/**
- * @brief
- *
- */
-ISR_CODE extern "C" void LOCAL_LN_INTERRUPT_TYPE I2C1_ERR_IRQHandler(void)
-{
-    i2cIrqHandler(1, true);
-}
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -287,27 +251,6 @@ ISR_CODE void lnDisableInterrupt(const LnIRQ &irq)
     _enableDisable(false, irq);
 }
 
-void dmaIrqHandler(int dma, int channel);
-#define DMA_IRQ(d, c)                                                                                                  \
-    ISR_CODE extern "C" void LOCAL_LN_INTERRUPT_TYPE DMA##d##_Channel##c##_IRQHandler(void)                            \
-    {                                                                                                                  \
-        dmaIrqHandler(d, c);                                                                                           \
-    }
-
-DMA_IRQ(0, 0)
-DMA_IRQ(0, 1)
-DMA_IRQ(0, 2)
-DMA_IRQ(0, 3)
-DMA_IRQ(0, 4)
-DMA_IRQ(0, 5)
-DMA_IRQ(0, 6)
-DMA_IRQ(1, 0)
-DMA_IRQ(1, 1)
-DMA_IRQ(1, 2)
-DMA_IRQ(1, 3)
-DMA_IRQ(1, 4)
-DMA_IRQ(1, 5)
-DMA_IRQ(1, 6)
 /**
  * @brief
  *
