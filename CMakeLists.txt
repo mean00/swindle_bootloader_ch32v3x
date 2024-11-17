@@ -12,7 +12,7 @@ include(./build_default.cmake)
 
 SET(LN_DISABLE_LOGGER_UART TRUE CACHE Internal "")
 SET(LN_DISABLE_FLOAT_PRINTF TRUE CACHE Internal "")
-#SET(LN_DISABLE_DEFAULT_IRQ_TABLE TRUE CACHE Internal "")
+SET(LN_DISABLE_DEFAULT_IRQ_TABLE TRUE CACHE Internal "")
 SET(LN_FREERTOS_CONFIG_DIR ${CMAKE_SOURCE_DIR}/src/freertos_config CACHE INTERNAL "")
 
 
@@ -79,7 +79,8 @@ include(${AF_FOLDER}/libraries/tinyUsb/tiny.cmake)
 
 INCLUDE_DIRECTORIES(${AF_FOLDER}/private_include)
 
-
+ADD_DEFINITIONS("-DUSE_CH32v3x_HW_IRQ_STACK=1")
+ADD_DEFINITIONS("-DARCH_FPU=1")
 # Update paths
 IF(FALSE)
   IF(USE_CLANG)
@@ -91,13 +92,12 @@ IF(FALSE)
   ENDIF(USE_CLANG)
 ENDIF()
 
-ADD_DEFINITIONS("-DARCH_FPU=0")
 
 IF(DEBUG_BUILD)
   ADD_DEFINITIONS("-O1 -g3 -DDEBUG_BUILD")
   SET(TAG "_DEBUG" CACHE INTERNAL "")
 ELSE()
-  ADD_DEFINITIONS("-Oz")
+  ADD_DEFINITIONS("-O1 -Os")
 ENDIF(DEBUG_BUILD)
 #
 SET(SRCS
@@ -107,13 +107,22 @@ SET(SRCS
         src/logger_override.cpp        
         src/check_status.cpp
         src/go_dfu.cpp
+#       
         )
+
+IF( LN_DISABLE_DEFAULT_IRQ_TABLE )
+  SET( SRCS ${SRCS}  src/irq_override.cpp src/ch32v3x_interrupt_table.cpp )
+
+ENDIF()
 
 #src/usb_setup.cpp
 #src/interrupt_override.cpp
 
 GENERATE_GD32_FIRMWARE( swindle_bootloader_ch32v3x ${LNA} ${SRCS} ${EXTRA} )
 target_link_libraries( swindle_bootloader_ch32v3x lnArduino )
+
+
+
 #
 #
 SET(TGT_NAME "CH32V3x")
