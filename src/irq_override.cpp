@@ -11,6 +11,7 @@
 #include "lnIRQ.h"
 #include "lnIRQ_riscv_priv_ch32v3x.h"
 #include "lnRCU.h"
+
 /**
  * @brief
  *
@@ -44,73 +45,23 @@ struct CH32V3_INTERRUPTx
 typedef volatile CH32V3_INTERRUPTx CH32V3_INTERRUPT;
 
 #ifdef USE_CH32v3x_HW_IRQ_STACK
-#define HANDLER_DESC(x)                                                                                                \
-    extern "C" void x();                                                                                               \
-    extern "C" void x##_relay() LN_INTERRUPT_TYPE;
-#define HANDLER_DESC_C(y)                                                                                              \
-    extern "C" void y();                                                                                               \
-    extern "C" void y##_relay() LN_INTERRUPT_TYPE;
-extern "C" void unsupported_relay();
 #define LOCAL_LN_INTERRUPT_TYPE
 #define WCH_HW_STACK CH32_SYSCR_HWSTKEN
 #else
 #define LOCAL_LN_INTERRUPT_TYPE LN_INTERRUPT_TYPE
-#define HANDLER_DESC(x) extern "C" void x() LOCAL_LN_INTERRUPT_TYPE;
-#define HANDLER_DESC_C(y) extern "C" void y() LOCAL_LN_INTERRUPT_TYPE;
 #define WCH_HW_STACK 0
 #endif
-#define HANDLER_DESC_RAW(y) extern "C" void y() LOCAL_LN_INTERRUPT_TYPE;
-
-// #include "local_interrupt_table.h"
-/**
- *
- */
-
-/* LIST_OF_HANDLERS */
-
-/**
- * @brief
- *
- */
-extern "C" void __attribute__((noinline)) unsupported()
-{
-    deadEnd(11);
-}
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-/*- Create vector table -*/
-#undef INTERRUPT_DESC
-//--
-#define INTERRUPT_DESC_RAW(y) (uint32_t)y
-#ifdef USE_CH32v3x_HW_IRQ_STACK
-#define INTERRUPT_DESC(y) (uint32_t)y##_relay
-#else
-#define INTERRUPT_DESC(y) (uint32_t)y
-#endif
-//--
-#define UNSUPPORTED_NO(y) (uint32_t)unsupported_##y
+#define FAST_UNUSED 0xFF00
+#define SIZE_OF_VEC_TABLE 85
 
-#define VECTOR_TABLE __attribute__((section(".vector_table")))
-//--
-extern uint32_t vecTable[90] __attribute__((aligned(32)));
-uint32_t vecTable[90] __attribute__((aligned(32))); // = {LIST_OF_INTERRUPTS};
-//--
-#define SIZE_OF_VEC_TABLE sizeof(vecTable) / sizeof(uint32_t)
-extern const uint32_t size_of_vec_table = SIZE_OF_VEC_TABLE;
+static uint16_t fastInterrupt[4] = {FAST_UNUSED, FAST_UNUSED, FAST_UNUSED, FAST_UNUSED};
+CH32V3_INTERRUPT *pfic = (CH32V3_INTERRUPT *)LN_PFIC_ADR;
 
+uint32_t vecTable[SIZE_OF_VEC_TABLE] __attribute__((aligned(32)));
 uint8_t vec_revert_table[SIZE_OF_VEC_TABLE];
-
-#undef INTERRUPT_DESC
-
-#define WEAK_INTERRUPT(y)                                                                                              \
-    extern "C" void __attribute__((weak)) y()                                                                          \
-    {                                                                                                                  \
-        xAssert(0);                                                                                                    \
-    }
-
-WEAK_INTERRUPT(USB_WAKEUP_IRQHandler)
-WEAK_INTERRUPT(OTG_FS_IRQHandler)
 
 #define RELAY_FUNC(x)                                                                                                  \
     ISR_CODE extern "C" void __attribute__((naked)) x##_relay()                                                        \
@@ -118,65 +69,18 @@ WEAK_INTERRUPT(OTG_FS_IRQHandler)
         __asm__("jal " #x "\n"                                                                                         \
                 "mret");                                                                                               \
     }
-#define RELAY_DMA(d, c) RELAY_FUNC(DMA##d##_Channel##c##_IRQHandler)
-
-//---- Relay func
-#ifdef USE_CH32v3x_HW_IRQ_STACK
-RELAY_FUNC(USART0_IRQHandler)
-RELAY_FUNC(SysTick_Handler)
-RELAY_FUNC(OTG_FS_IRQHandler)
-RELAY_FUNC(unsupported)
-
-#endif
-// ---------+++++---
-
-#ifdef USE_CH32v3x_HW_IRQ_STACK
-#define HANDLER_DESC(x)                                                                                                \
-    extern "C" void x();                                                                                               \
-    extern "C" void x##_relay() LN_INTERRUPT_TYPE;
-#define HANDLER_DESC_C(y)                                                                                              \
-    extern "C" void y();                                                                                               \
-    extern "C" void y##_relay() LN_INTERRUPT_TYPE;
-extern "C" void unsupported_relay();
-#define LOCAL_LN_INTERRUPT_TYPE
-#define WCH_HW_STACK CH32_SYSCR_HWSTKEN
-#else
-#define LOCAL_LN_INTERRUPT_TYPE LN_INTERRUPT_TYPE
-#define HANDLER_DESC(x) extern "C" void x() LOCAL_LN_INTERRUPT_TYPE;
-#define HANDLER_DESC_C(y) extern "C" void y() LOCAL_LN_INTERRUPT_TYPE;
-#define WCH_HW_STACK 0
-#endif
-
-#include "ch32v30x_isr_helper.h"
-#include "lnArduino.h"
-#include "lnIRQ.h"
-#include "lnIRQ_riscv_priv_ch32v3x.h"
-#include "lnRCU.h"
-// #include "local_interrupt_table.h"
-#define size_of_vec_table 100
-
 /**
  *
  */
 static void PromoteIrqToFast(const LnIRQ &irq, int no);
 static void _enableDisable_direct(bool enableDisable, const int &irq_num);
 extern "C" void Logger_crash(const char *st);
-#define FAST_UNUSED 0xFF00
 
-extern uint32_t vecTable[] __attribute__((aligned(32)));
-extern uint8_t vec_revert_table[];
-uint16_t fastInterrupt[4] = {FAST_UNUSED, FAST_UNUSED, FAST_UNUSED, FAST_UNUSED};
-CH32V3_INTERRUPT *pfic = (CH32V3_INTERRUPT *)LN_PFIC_ADR;
-
-// Attribute [LEVEL1:LEVEL0][SHV] :
-//      LEVEL:
-//              0:0=LEVEL,
-//              0:1=RISING EDGE,
-//              1:0: FALLINGEDGE
-//      SHV:
-//              0 non vectored
-//              1 vectored
-//
+//---- Relay func
+#ifdef USE_CH32v3x_HW_IRQ_STACK
+RELAY_FUNC(SysTick_Handler)
+RELAY_FUNC(OTG_FS_IRQHandler)
+#endif
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -228,7 +132,7 @@ extern "C" void SW_Handler();
  */
 ISR_CODE void lnIrqSysInit()
 {
-    for (int i = 0; i < size_of_vec_table; i++)
+    for (int i = 0; i < SIZE_OF_VEC_TABLE; i++)
         vecTable[i] = (uint32_t)oops;
     vecTable[12] = (uint32_t)SysTick_Handler_relay;
     vecTable[14] = (uint32_t)SW_Handler;
@@ -251,7 +155,7 @@ ISR_CODE void lnIrqSysInit()
     //
     ;
     // Prepare invert able
-    for (int i = 0; i < size_of_vec_table; i++)
+    for (int i = 0; i < SIZE_OF_VEC_TABLE; i++)
     {
         int inverted = lookupIrq(i);
         xAssert(inverted < 256);
