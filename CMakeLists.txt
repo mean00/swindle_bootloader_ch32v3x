@@ -121,7 +121,7 @@ SET(SRCS
         )
 
 IF( LN_DISABLE_DEFAULT_IRQ_TABLE )
-  SET( SRCS ${SRCS}  src/irq_override.cpp src/ch32v3x_interrupt_table.cpp )
+  SET( SRCS ${SRCS}  src/irq_override.cpp  )
 ENDIF()
 
 IF( LN_DISABLE_DEFAULT_INIT )
