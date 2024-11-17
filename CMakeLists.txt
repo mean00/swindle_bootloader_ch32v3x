@@ -37,7 +37,10 @@ SET(LN_USB_DFU 1 CACHE INTERNAL "")
 
 SET(LN_USB_BUFFER_SIZE  CACHE INTERNAL "") # increase usb cdc buff
 
-
+IF(USE_CH32v3x_PURE_RAM)
+ELSE()
+SET(LN_CUSTOM_LD_SCRIPT ${CMAKE_SOURCE_DIR}/ldscript/clang.lld )
+ENDIF()
 
 MACRO(POSTPROCESS target)
   add_custom_command(TARGET ${target}

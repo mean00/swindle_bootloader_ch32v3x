@@ -10,6 +10,18 @@
 
 extern bool check_status();
 extern void go_dfu();
+extern void DisableIrqs();
+/**
+ */
+void jumpIntoApp()
+{
+    DisableIrqs();
+#define JUMP                                                                                                           \
+    "lui t0, 0x4\t\n"                                                                                                  \
+    "jalr x0,0(t0)\n"
+    __asm__(JUMP ::);
+}
+
 /**
     \brief main code
 */
@@ -21,12 +33,9 @@ void setup()
     if (check_status() == false)
     {
         // nope, we can jump to the application
-        while (1)
-        {
-            lnDelay(100);
-        }
+        jumpIntoApp();
     }
-    // full setup
+    // yes
     go_dfu();
 }
 /*
