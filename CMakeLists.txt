@@ -10,12 +10,13 @@ MESSAGE(STATUS "================================")
 OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
 include(./build_default.cmake)
 
-SET(LN_DISABLE_LOGGER_UART TRUE CACHE Internal "")
-SET(LN_DISABLE_FLOAT_PRINTF TRUE CACHE Internal "")
-SET(LN_DISABLE_DEFAULT_IRQ_TABLE TRUE CACHE Internal "")
-SET(LN_FREERTOS_CONFIG_DIR ${CMAKE_SOURCE_DIR}/src/freertos_config CACHE INTERNAL "")
-SET(LN_DISABLE_DEFAULT_INIT "Disable default init" TRUE CACHE Internal "")
-SET(LN_DISABLE_DEFAULT_DMA "Disable  dma code"TRUE CACHE Internal "")
+SET(LN_DISABLE_LOGGER_UART TRUE CACHE INTERNAL "")
+SET(LN_DISABLE_FLOAT_PRINTF TRUE CACHE INTERNAL "")
+SET(LN_DISABLE_DEFAULT_IRQ_TABLE TRUE CACHE INTERNAL "")
+SET(LN_FREERTOS_CONFIG_DIR ${CMAKE_SOURCE_DIR}/src/freertos_config CACHE STRING "")
+SET(LN_DISABLE_DEFAULT_INIT  TRUE CACHE INTERNAL "")
+SET(LN_DISABLE_DEFAULT_DMA  TRUE CACHE INTERNAL "")
+SET(LN_CUSTOM_TINYUSB_CONF TRUE CACHE INTERNAL "")
 
 SET(LN_ENABLE_USBD  TRUE  CACHE INTERNAL "")
 SET(LN_ENABLE_I2C   FALSE CACHE INTERNAL "")
@@ -61,6 +62,10 @@ ENDIF()
 
 SET(AF_FOLDER  ${CMAKE_SOURCE_DIR}/lnArduino)
 include(./mcuSelect.cmake)
+include_directories(src/freertos_config)
+
+
+
 SET(CMAKE_TOOLCHAIN_FILE ${AF_FOLDER}/lnArduino.cmake)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${AF_FOLDER}/cmake CACHE INTERNAL "")
 
@@ -69,6 +74,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${A
 PROJECT(swindle_ch32_bootloader NONE) # the NONE is very important !
 ENABLE_LANGUAGE(C CXX ASM) # this is important too!
 # Generate version
+include_directories(src/freertos_config)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 
@@ -106,11 +112,11 @@ ENDIF(DEBUG_BUILD)
 SET(SRCS
         src/main.cpp
         src/hash_check.cpp
-        src/xxhash.c        
-        src/logger_override.cpp        
+        src/xxhash.c
+        src/logger_override.cpp
         src/check_status.cpp
         src/go_dfu.cpp
-#       
+#
         )
 
 IF( LN_DISABLE_DEFAULT_IRQ_TABLE )

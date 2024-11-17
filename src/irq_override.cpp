@@ -30,16 +30,17 @@ extern "C" void unsupported_relay();
 #include "lnIRQ_riscv_priv_ch32v3x.h"
 #include "lnRCU.h"
 #include "local_interrupt_table.h"
+#define size_of_vec_table 100
 
 /**
  *
  */
 static void PromoteIrqToFast(const LnIRQ &irq, int no);
-void _enableDisable_direct(bool enableDisable, const int &irq_num);
+static void _enableDisable_direct(bool enableDisable, const int &irq_num);
 extern "C" void Logger_crash(const char *st);
 #define FAST_UNUSED 0xFF00
 
-extern const uint32_t vecTable[] __attribute__((aligned(32)));
+extern uint32_t vecTable[] __attribute__((aligned(32)));
 extern uint8_t vec_revert_table[];
 uint16_t fastInterrupt[4] = {FAST_UNUSED, FAST_UNUSED, FAST_UNUSED, FAST_UNUSED};
 CH32V3_INTERRUPT *pfic = (CH32V3_INTERRUPT *)LN_PFIC_ADR;
@@ -56,7 +57,10 @@ CH32V3_INTERRUPT *pfic = (CH32V3_INTERRUPT *)LN_PFIC_ADR;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-
+static void oops()
+{
+    xAssert(0);
+}
 // API used by the freeRTOS port
 
 /**
@@ -92,14 +96,21 @@ ISR_CODE static int lookupIrq(int irq)
     }
     return 0;
 }
-
+extern "C" void OTG_FS_IRQHandler_relay();
+extern "C" void SysTick_Handler_relay();
+extern "C" void SW_Handler();
 /**
  * @brief
  *
  */
 ISR_CODE void lnIrqSysInit()
 {
-    // Disable fast
+    for (int i = 0; i < size_of_vec_table; i++)
+        vecTable[i] = (uint32_t)oops;
+    vecTable[12] = (uint32_t)SysTick_Handler_relay;
+    vecTable[14] = (uint32_t)SW_Handler;
+    vecTable[67] = (uint32_t)OTG_FS_IRQHandler_relay;
+    vecTable[83] = (uint32_t)OTG_FS_IRQHandler_relay;
     for (int i = 0; i < 4; i++)
     {
         pfic->VTFIDR[i] = 0;
@@ -115,7 +126,6 @@ ISR_CODE void lnIrqSysInit()
         pfic->IPRIOIR[i] = prio32;
     }
     //
-    extern const uint32_t size_of_vec_table;
     ;
     // Prepare invert able
     for (int i = 0; i < size_of_vec_table; i++)
@@ -274,15 +284,6 @@ extern "C" void __attribute__((noinline)) deadEnd(int code)
         // blink red light...
         asm volatile("nop");
     }
-}
-
-/**
- * @brief
- *
- */
-extern "C" void LN_INTERRUPT_TYPE Break_Point_Handler(void)
-{
-    deadEnd(5);
 }
 
 /**
