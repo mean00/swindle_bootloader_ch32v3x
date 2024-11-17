@@ -61,8 +61,8 @@ extern "C" void __attribute__((noinline)) unsupported()
 
 #define VECTOR_TABLE __attribute__((section(".vector_table")))
 //--
-extern VECTOR_TABLE uint32_t vecTable[90] __attribute__((aligned(32)));
-VECTOR_TABLE uint32_t vecTable[90] __attribute__((aligned(32))); // = {LIST_OF_INTERRUPTS};
+extern uint32_t vecTable[90] __attribute__((aligned(32)));
+uint32_t vecTable[90] __attribute__((aligned(32))); // = {LIST_OF_INTERRUPTS};
 //--
 #define SIZE_OF_VEC_TABLE sizeof(vecTable) / sizeof(uint32_t)
 extern const uint32_t size_of_vec_table = SIZE_OF_VEC_TABLE;

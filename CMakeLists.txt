@@ -17,6 +17,7 @@ SET(LN_FREERTOS_CONFIG_DIR ${CMAKE_SOURCE_DIR}/src/freertos_config CACHE STRING 
 SET(LN_DISABLE_DEFAULT_INIT  TRUE CACHE INTERNAL "")
 SET(LN_DISABLE_DEFAULT_DMA  TRUE CACHE INTERNAL "")
 SET(LN_CUSTOM_TINYUSB_CONF TRUE CACHE INTERNAL "")
+SET(LN_DISABLE_PRINTF TRUE CACHE INTERNAL "")
 
 SET(LN_ENABLE_USBD  TRUE  CACHE INTERNAL "")
 SET(LN_ENABLE_I2C   FALSE CACHE INTERNAL "")
@@ -131,7 +132,7 @@ ENDIF()
 #src/interrupt_override.cpp
 
 GENERATE_GD32_FIRMWARE( swindle_bootloader_ch32v3x ${LNA} ${SRCS} ${EXTRA} )
-target_link_libraries( swindle_bootloader_ch32v3x lnArduino )
+#target_link_libraries( swindle_bootloader_ch32v3x tinyUsb lnArduino )
 
 
 
