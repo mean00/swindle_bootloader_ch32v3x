@@ -14,6 +14,11 @@ void lnRunTimeInit();
 void lnRunTimeInitPostPeripherals();
 extern void go_dfu();
 extern bool check_status();
+// ??
+void DisableIrqs()
+{
+}
+
 /**
  *
  * @param
@@ -53,14 +58,13 @@ int main()
     if (check_status() == false)
     {
         // nope, we can jump to the application
-        while (1)
-        {
-            lnDelay(100);
-        }
+        DisableIrqs();
+#define JUMP                                                                                                           \
+    "lui t0, 0x4\t\n"                                                                                                  \
+    "jalr x0,0(t0)\n"
+        __asm__(JUMP ::);
     }
     // full setup
-
-    //
 
 #ifndef LN_INITIAL_TASK_PRIORITY
 #define LN_INITIAL_TASK_PRIORITY 2 //

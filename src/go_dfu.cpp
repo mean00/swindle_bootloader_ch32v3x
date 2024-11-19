@@ -69,7 +69,7 @@ uint8_t const desc_configuration[] = {
 char const *string_desc_arr[] = {
     (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
     "lnBMP",                    // 1: Manufacturer
-    "lnBMP CH32-DFU",           // 2: Product
+    "lnBMP CH32-DFUv2.0",       // 2: Product
     "123456",                   // 3: Serials, should use chip ID
     FLASH_DFU_STRING,
     //"lnBMP_FW",                       // 4: DFU Partition 1

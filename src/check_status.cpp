@@ -62,7 +62,7 @@ bool check_status()
     }
 
     //-- Force status
-    go_dfu = 1;
+    // go_dfu = 1;
     //--
     return go_dfu != 0;
 }
