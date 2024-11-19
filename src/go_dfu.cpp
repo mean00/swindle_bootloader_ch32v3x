@@ -119,7 +119,12 @@ void dfu_download_cb(/*uint8_t alt,*/ uint32_t block_num, uint8_t const *data, u
         {
         case 0x41: // erase
         {
-            if (!LNFMC_ERASE(address, 1)) // erase 1 KB
+            if (address < (FLASH_BOOTLDR_SIZE_KB * 1024))
+            {
+                printC("Incorrect address \n");
+                er = DFU_STATUS_ERR_WRITE;
+            }
+            else if (!LNFMC_ERASE(address, 1)) // erase 1 KB
                 er = DFU_STATUS_ERR_ERASE;
             break;
         }
@@ -144,7 +149,12 @@ void dfu_download_cb(/*uint8_t alt,*/ uint32_t block_num, uint8_t const *data, u
     default:
         printC("other CB\n");
         uint32_t adr = target_address + (block_num - 2) * CFG_TUD_DFU_XFER_BUFSIZE;
-        if (!LNFMC_WRITE(adr, data, length))
+        if (adr < (FLASH_BOOTLDR_SIZE_KB * 1024))
+        {
+            printC("Incorrect address \n");
+            er = DFU_STATUS_ERR_WRITE;
+        }
+        else if (!LNFMC_WRITE(adr, data, length))
         {
             printC("Flash Err\n");
             er = DFU_STATUS_ERR_WRITE;
@@ -158,6 +168,10 @@ void dfu_download_cb(/*uint8_t alt,*/ uint32_t block_num, uint8_t const *data, u
  * @brief
  *
  */
+
+extern "C" void tusb_init();
+extern "C" void tud_task();
+
 bool go_dfu()
 {
     for (int i = 0; i < NB_LEDS; i++)
@@ -172,68 +186,22 @@ bool go_dfu()
     usb->setConfiguration(desc_configuration, desc_configuration, &desc_device, NULL);
     usb->setEventHandler(NULL, helloUsbEvent);
     lnUsbDFU::addDFURTCb(&dfu_download_cb);
-    usb->start();
+#define LED_BLINK_PERIOD 100
+    // bypass usb task, we run tinyusb in non freertos mode to gain some flash space
+    tusb_init();
+    uint32_t rendez_vous = lnGetMs() + LED_BLINK_PERIOD;
     while (1)
     {
-        lnDelayMs(500);
-        for (int i = 0; i < NB_LEDS; i++)
+        uint32_t newClock = lnGetMs();
+        if (newClock > rendez_vous)
         {
-            lnDigitalToggle(ledPins[i]);
+            rendez_vous = newClock + LED_BLINK_PERIOD;
+            for (int i = 0; i < NB_LEDS; i++)
+            {
+                lnDigitalToggle(ledPins[i]);
+            }
         }
+        tud_task();
     }
-}
-/**
- * @brief
- *
- * @param adr
- * @return true
- * @return false
- */
-bool flashErase(uint32_t adr)
-{
-    if (adr < 8 * 1024) // dont write the bootloader
-    {
-        printC("Dont erase the BL!\n");
-        return false;
-    }
-    printCHex("erase", adr);
-    return LNFMC_ERASE(adr, 1);
-}
-/**
- * @brief
- *
- * @param adr
- * @param data
- * @param size
- * @return true
- * @return false
- */
-bool flashWrite(uint32_t adr, const uint8_t *data, int size)
-{
-    if (adr < (FLASH_BOOTLDR_SIZE_KB * 1024)) // dont write the bootloader
-    {
-        printC("Dont write the BL!\n");
-        return false;
-    }
-    printCHex("wr", adr);
-    if (!LNFMC_WRITE(adr, data, size))
-    {
-        printCHex("write failed\n", adr);
-        return false;
-    }
-    uint8_t *p = (uint8_t *)adr;
-    bool correct = true;
-    for (int i = 0; i < size; i++)
-    {
-        if (data[i] != p[i])
-        {
-            correct = false;
-            printCHex("write verify failed at adr\n", adr + i);
-            printCHex(" expected", p[i]);
-            printCHex(" got ", data[i]);
-            printC("\n");
-        }
-    }
-    return correct;
 }
 // EOF
