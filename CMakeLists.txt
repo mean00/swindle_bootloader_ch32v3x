@@ -67,7 +67,7 @@ ENDIF()
 SET(AF_FOLDER  ${CMAKE_SOURCE_DIR}/lnArduino)
 include(./mcuSelect.cmake)
 include_directories(src/freertos_config)
-
+include(bootloader_config.cmake)
 
 
 SET(CMAKE_TOOLCHAIN_FILE ${AF_FOLDER}/lnArduino.cmake)
@@ -133,7 +133,7 @@ ENDIF()
 
 #src/usb_setup.cpp
 #src/interrupt_override.cpp
-
+configure_file("${CMAKE_SOURCE_DIR}/src/memory_config.h.in" "${CMAKE_BINARY_DIR}/memory_config.h" @ONLY)
 GENERATE_GD32_FIRMWARE( swindle_bootloader_ch32v3x ${LNA} ${SRCS} ${EXTRA} )
 #target_link_libraries( swindle_bootloader_ch32v3x tinyUsb lnArduino )
 
@@ -173,3 +173,4 @@ ENDIF()
 #
 set_target_properties(swindle_bootloader_ch32v3x PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x_${COMPILER}${TAG} )
 #
+MESSAGE(STATUS "Bootloader size : ${FLASH_BOOTLDR_SIZE_KB} KB")

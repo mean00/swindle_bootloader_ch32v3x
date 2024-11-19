@@ -51,6 +51,9 @@ extern "C" void vTaskDelete(TaskHandle_t x)
 {
     xAssert(0);
 }
+/**
+ *
+ */
 extern "C" int vsnprintf_(char *buffer, size_t count, const char *format, va_list va)
 {
     return 0;
