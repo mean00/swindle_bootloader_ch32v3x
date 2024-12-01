@@ -1,10 +1,10 @@
 #include "lnArduino.h"
 #include "memory_config.h"
-#include "xxhash.h"
 
 /*
     Check  fw is valid
 */
+extern "C" uint32_t ch32_crc(uint32_t addr, uint32_t len_in_u32);
 
 bool check_fw()
 {
@@ -25,7 +25,8 @@ bool check_fw()
         return true; // un hashed default value, we accept them
     }
 
-    uint32_t computed = XXH32(&(base_addr[3]), imageSize, 0x100);
+    // uint32_t computed = XXH32(&(base_addr[3]), imageSize, 0x100);
+    uint32_t computed = ch32_crc((uint32_t) & (base_addr[3]), imageSize >> 2);
     return (computed == checksum);
 }
 

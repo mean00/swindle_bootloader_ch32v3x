@@ -116,10 +116,11 @@ ENDIF(DEBUG_BUILD)
 SET(SRCS
         src/main.cpp
         src/hash_check.cpp
-        src/xxhash.c
+        #src/xxhash.c
         src/logger_override.cpp
         src/check_status.cpp
         src/go_dfu.cpp
+        src/ch32_crc.c
 #
         )
 
