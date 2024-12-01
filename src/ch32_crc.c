@@ -26,16 +26,11 @@ uint32_t ch32_crc(uint32_t addr, uint32_t len_in_u32)
     crc->control = CH32_CRC32_CONTROL_RESET;
     // crc->data = init;
     uint32_t *mem = (uint32_t *)addr;
-    for (int i = len_in_u32; i > 0; i--)
+    uint32_t *lim = mem;
+    lim += len_in_u32;
+    for (uint32_t *p = mem; p < lim; p++)
     {
-        uint32_t in = *(mem++);
-#if 1
-         uint32_t out = in;
-#else
-        uint32_t out =
-            ((in >> 24) & 0xff) | (((in >> 16) & 0xff) << 8) | (((in >> 8) & 0xff) << 16) | ((in & 0xff) << 24);
-#endif
-        crc->data = out;
+        crc->data = *p;
     }
     return (crc->data);
 }
