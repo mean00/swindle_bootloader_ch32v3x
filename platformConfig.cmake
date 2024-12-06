@@ -22,8 +22,8 @@ IF("${LN_ARCH}" STREQUAL "RISCV") # RISCV
       #-- CLANG --
       # No FPU
       #SET(PLATFORM_CLANG_PATH  "/riscv/tools_llvm/bin" CACHE INTERNAL "")
-      SET(PLATFORM_CLANG_PATH  "/riscv/tools_llvm/bin" CACHE INTERNAL "")
-      SET(PLATFORM_CLANG_VERSION "-17")
+      SET(PLATFORM_CLANG_PATH  "/riscv/llvm_19.1/bin" CACHE INTERNAL "")
+      SET(PLATFORM_CLANG_VERSION "-19")
       IF(USE_HW_FPU)
           SET(PLATFORM_CLANG_SYSROOT "${PLATFORM_CLANG_PATH}/../lib/clang-runtimes/riscv32-unknown-elf/riscv32_hard_fp/" CACHE INTERNAL "")
               #SET(PLATFORM_CLANG_SYSROOT "${PLATFORM_CLANG_PATH}/../lib/clang-runtimes/riscv32-none-eabi/riscv32_hard_fp/" CACHE INTERNAL "")
