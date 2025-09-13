@@ -1,13 +1,13 @@
 {
     /* A name for the dev container displayed in the UI */
-    "name": "swindle_ch32_bl",
+    "name": "swindlech32bootloader",
     /* container name when creating container */
-    "image": "swindle/swindle:latest",
+    "image": "swindlech32bl/swindlech32bl:latest",
     /* mount the local folder to /workspaces folder of Docker image */
-    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/swindle,type=bind",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/swindlech32bl,type=bind",
     /* the path of workspace folder, which means that this folder will be opened after container is running
     */
-    "workspaceFolder": "/workspaces/swindle",
+    "workspaceFolder": "/workspaces/swindlech32bl",
     /* mount the VS Code extensions to the target path, and then they don't need to be installed again when rebuilding the container
     */
     "mounts": [
