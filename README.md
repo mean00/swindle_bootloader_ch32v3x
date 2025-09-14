@@ -22,7 +22,7 @@ The layout is as follows :
 
 - 0000 : Reset instruction (usuall j reset vector)
 - 0004 : firmware size in bytes
-- 0008 : xxhash32 hash of the firmware
+- 0008 : crc32 hash of the firmware (same hash as GDB)
 
 If firmware size is 0x1234 and xxhash is 0x5678, the hash check is skipped.
 
