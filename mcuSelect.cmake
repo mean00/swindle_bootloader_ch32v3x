@@ -10,7 +10,7 @@ IF(NOT DEFINED LN_ARCH)
     SET(LN_SPEC               "picolibc"  CACHE INTERNAL "") # if not set we use nano
     SET(LN_BOOTLOADER_SIZE    0           CACHE INTERNAL "") # ALSO UPDATE FLASH_BOOTLDR_SIZE_KB
     SET(LN_MCU_EEPROM_SIZE    0           CACHE INTERNAL "")
-    SET(LN_MCU_STATIC_RAM     4           CACHE INTERNAL "")
+    SET(LN_MCU_STATIC_RAM     8           CACHE INTERNAL "")
 
     #SET(LN_SPEC         "picolibc"   CACHE INTERNAL "") # if not set we use nano
     IF(USE_CH32v3x_PURE_RAM) # TOTAL is 128k!

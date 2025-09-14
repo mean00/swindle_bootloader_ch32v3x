@@ -1,5 +1,5 @@
 //
-#include "lnArduino.h"
+#include "esprit.h"
 #include "lnSerial.h"
 #include "stdarg.h"
 extern "C" void Logger_crash(const char *st)

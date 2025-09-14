@@ -1,4 +1,4 @@
-#include "lnArduino.h"
+#include "esprit.h"
 #include "memory_config.h"
 
 /*
@@ -26,7 +26,7 @@ bool check_fw()
     }
 
     // uint32_t computed = XXH32(&(base_addr[3]), imageSize, 0x100);
-    uint32_t computed = ch32_crc((uint32_t) & (base_addr[3]), imageSize >> 2);
+    uint32_t computed = ch32_crc((uint32_t)&(base_addr[3]), imageSize >> 2);
     return (computed == checksum);
 }
 

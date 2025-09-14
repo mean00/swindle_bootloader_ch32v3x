@@ -8,6 +8,14 @@ MESSAGE(STATUS "Starting swindle_bootloader_ch32v3x_ (ch32)")
 MESSAGE(STATUS "================================")
 
 OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
+
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+  MESSAGE(STATUS "Using CCACHE as ${CCACHE_FOUND}")
+  set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_FOUND})
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_FOUND})
+endif()
+
 include(./build_default.cmake)
 
 SET(LN_DISABLE_LOGGER_UART TRUE CACHE INTERNAL "")
@@ -64,14 +72,14 @@ ELSE()
   ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6030")
 ENDIF()
 
-SET(AF_FOLDER  ${CMAKE_SOURCE_DIR}/lnArduino)
+SET(ESPRIT_ROOT  ${CMAKE_SOURCE_DIR}/esprit)
 include(./mcuSelect.cmake)
 include_directories(src/freertos_config)
 include(bootloader_config.cmake)
 
 
-SET(CMAKE_TOOLCHAIN_FILE ${AF_FOLDER}/lnArduino.cmake)
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${AF_FOLDER}/cmake CACHE INTERNAL "")
+SET(CMAKE_TOOLCHAIN_FILE ${ESPRIT_ROOT}/esprit.cmake)
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${ESPRIT_ROOT}/cmake CACHE INTERNAL "")
 
 
 
@@ -82,13 +90,13 @@ include_directories(src/freertos_config)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 
-ADD_SUBDIRECTORY(${AF_FOLDER})
+ADD_SUBDIRECTORY(${ESPRIT_ROOT})
 
-INCLUDE(${AF_FOLDER}/setup.cmake)
+INCLUDE(${ESPRIT_ROOT}/setup.cmake)
 USE_LIBRARY(tinyUsb)
-include(${AF_FOLDER}/libraries/tinyUsb/tiny.cmake)
+include(${ESPRIT_ROOT}/libraries/tinyUsb/tiny.cmake)
 
-INCLUDE_DIRECTORIES(${AF_FOLDER}/private_include)
+INCLUDE_DIRECTORIES(${ESPRIT_ROOT}/private_include)
 
 ADD_DEFINITIONS("-DUSE_CH32v3x_HW_IRQ_STACK=1")
 ADD_DEFINITIONS("-DARCH_FPU=1")
@@ -134,9 +142,11 @@ ENDIF()
 
 #src/usb_setup.cpp
 #src/interrupt_override.cpp
+SET(SEPSEP "/")
 configure_file("${CMAKE_SOURCE_DIR}/src/memory_config.h.in" "${CMAKE_BINARY_DIR}/memory_config.h" @ONLY)
+include_directories( ${ESPRIT_ROOT}/libraries/tinyUsb/include)
 GENERATE_GD32_FIRMWARE( swindle_bootloader_ch32v3x ${LNA} ${SRCS} ${EXTRA} )
-#target_link_libraries( swindle_bootloader_ch32v3x tinyUsb lnArduino )
+target_link_libraries( swindle_bootloader_ch32v3x PRIVATE tinyUsb esprit_single_lib)
 
 
 
