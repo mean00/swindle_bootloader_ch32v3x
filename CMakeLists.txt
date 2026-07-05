@@ -1,187 +1,145 @@
-
-set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
+#=============================================================================#
+# Two-stage bootloader for CH32V3x (RISC-V)
+# Stage 1: Flash resident — DFU decision, copy stage2, chain
+# Stage 2: RAM resident — DFU handler via polled USB OTG FS
+#=============================================================================#
 cmake_minimum_required(VERSION 3.13)
-MESSAGE(STATUS "================================")
-MESSAGE(STATUS "Starting swindle_bootloader_ch32v3x_ (ch32)")
-MESSAGE(STATUS "================================")
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-OPTION(DEBUG_BUILD "Enable verbose, larger code" OFF)
+message(STATUS "==========================================")
+message(STATUS "swindle_bootloader_ch32v3x — two-stage build")
+message(STATUS "==========================================")
 
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-  MESSAGE(STATUS "Using CCACHE as ${CCACHE_FOUND}")
-  set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_FOUND})
-  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_FOUND})
+# ---- Configuration ----
+include(${CMAKE_SOURCE_DIR}/bootloader_config.cmake)
+include(${CMAKE_SOURCE_DIR}/mcuSelect.cmake)
+include(${CMAKE_SOURCE_DIR}/platformConfig.cmake)
+
+# ---- Toolchain setup ----
+option(USE_CLANG "Use Clang instead of GCC" OFF)
+
+#set(USE_CLANG True)
+
+if(USE_CLANG)
+  include(${CMAKE_SOURCE_DIR}/toolchain_clang.cmake)
+else()
+  include(${CMAKE_SOURCE_DIR}/toolchain_gcc.cmake)
 endif()
 
-include(./build_default.cmake)
+# ---- Project ----
+project(swindle_bootloader_ch32v3x NONE)
+enable_language(C CXX ASM)
 
-SET(LN_DISABLE_LOGGER_UART TRUE CACHE INTERNAL "")
-SET(LN_DISABLE_FLOAT_PRINTF TRUE CACHE INTERNAL "")
-SET(LN_DISABLE_DEFAULT_IRQ_TABLE TRUE CACHE INTERNAL "")
-SET(LN_FREERTOS_CONFIG_DIR ${CMAKE_SOURCE_DIR}/src/freertos_config CACHE STRING "")
-SET(LN_DISABLE_DEFAULT_INIT  TRUE CACHE INTERNAL "")
-SET(LN_DISABLE_DEFAULT_DMA  TRUE CACHE INTERNAL "")
-SET(LN_CUSTOM_TINYUSB_CONF TRUE CACHE INTERNAL "")
-SET(LN_DISABLE_PRINTF TRUE CACHE INTERNAL "")
+# ---- Source directories ----
+set(ESPRIT_MINI_INC   ${CMAKE_SOURCE_DIR}/esprit_mini/include)
+set(RISCV_CH32_INC    ${CMAKE_SOURCE_DIR}/riscv_ch32v3x)
+set(SRC_COMMON        ${CMAKE_SOURCE_DIR}/src_common)
+set(SRC_STAGE1        ${CMAKE_SOURCE_DIR}/src_stage1)
+set(SRC_STAGE2        ${CMAKE_SOURCE_DIR}/src_stage2)
 
-SET(LN_ENABLE_USBD  TRUE  CACHE INTERNAL "")
-SET(LN_ENABLE_I2C   FALSE CACHE INTERNAL "")
-SET(LN_ENABLE_SPI   FALSE CACHE INTERNAL "")
-SET(LN_ENABLE_UART  FALSE  CACHE INTERNAL "")
-SET(LN_ENABLE_RUST  FALSE  CACHE INTERNAL "")
+# Common include directories
+include_directories(${ESPRIT_MINI_INC} ${RISCV_CH32_INC} ${SRC_COMMON} ${CMAKE_BINARY_DIR})
 
-# Target CH32V303
-SET(USE_CH32v3x_USB_OTG     True CACHE INTERNAL "")
-SET(USE_CH32V3x             True CACHE INTERNAL "")
+# Override LN_BOOTLOADER_SIZE for the linker script (set to 0 by mcuSelect.cmake)
+set(LN_BOOTLOADER_SIZE ${BOOTLOADER_SIZE_KB} CACHE INTERNAL "")
 
-# tiny USB configuration
-SET(LN_USB_NB_CDC 0) # 2 CDC interfaces
-SET(LN_USB_NB_HID 0) # No HID
-SET(LN_USB_DFU_RUNTIME 0 CACHE INTERNAL "")
-SET(LN_USB_DFU 1 CACHE INTERNAL "")
+# Generate memory_config.h from template
+set(SEPSEP "/")
+configure_file("${SRC_COMMON}/memory_config.h.in" "${CMAKE_BINARY_DIR}/memory_config.h" @ONLY)
 
-SET(LN_USB_BUFFER_SIZE  CACHE INTERNAL "") # increase usb cdc buff
+# Generate flash_config.h (used by both stages)
+configure_file("${CMAKE_SOURCE_DIR}/flash_config.h.in" "${CMAKE_BINARY_DIR}/flash_config.h" @ONLY)
 
-IF(USE_CH32v3x_PURE_RAM)
-ELSE()
-  SET(LN_CUSTOM_LD_SCRIPT ${CMAKE_SOURCE_DIR}/ldscript/clang.lld )
-ENDIF()
+# ---- Esprit-mini common sources (used by both stages) ----
+set(ESPRIT_MINI_SRCS
+    ${CMAKE_SOURCE_DIR}/esprit_mini/gpio.cpp
+    ${CMAKE_SOURCE_DIR}/esprit_mini/system_timer.cpp
+    ${CMAKE_SOURCE_DIR}/esprit_mini/debug.cpp
+    ${CMAKE_SOURCE_DIR}/esprit_mini/peripheral.cpp
+    ${CMAKE_SOURCE_DIR}/esprit_mini/rcu.cpp
+)
 
-MACRO(POSTPROCESS target)
-  add_custom_command(TARGET ${target}
-    POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${target}> $<TARGET_FILE:${target}>.bin
+# Common sources (used by both stages)
+set(COMMON_SRCS
+    ${SRC_COMMON}/stubs.cpp
+)
+
+# ---- Stage 2 (RAM resident) ----
+set(STAGE2_SRCS
+    ${SRC_STAGE2}/dfu.cpp
+    ${SRC_STAGE2}/stage2_entry.cpp
+    ${SRC_STAGE2}/stage2_irq.cpp
+    ${SRC_STAGE2}/usb.cpp
+    ${ESPRIT_MINI_SRCS}
+    ${CMAKE_SOURCE_DIR}/esprit_mini/irq.cpp
+    ${COMMON_SRCS}
+)
+
+generate_firmware(stage2.elf ${STAGE2_SRCS})
+
+# Custom linker script for stage2 (RAM)
+target_link_options(stage2.elf PRIVATE
+    "-T${CMAKE_SOURCE_DIR}/linker/stage2.ld"
+    "-Wl,-Map,${CMAKE_BINARY_DIR}/stage2.map"
+    ${LD_FLAGS_COMMON}
+)
+
+# Post-process: stage2.elf → stage2.bin → stage2_payload.h
+set(STAGE2_BIN  ${CMAKE_BINARY_DIR}/stage2.bin)
+set(STAGE2_H    ${CMAKE_BINARY_DIR}/stage2_payload.h)
+
+add_custom_command(TARGET stage2.elf POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:stage2.elf> ${STAGE2_BIN}
+    COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/bin2h.py ${STAGE2_BIN} > ${STAGE2_H}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMENT "Generating bin file"
-    )
-  add_custom_command(TARGET ${target}
-    POST_BUILD
-    COMMAND ${CMAKE_SIZE} --format=berkeley $<TARGET_FILE:${target}>
+    COMMENT "Generating stage2 binary and header"
+)
+
+# ---- Stage 1 (Flash resident) ----
+# Stage1 needs the generated header, so add a dependency
+set(STAGE1_SRCS
+    ${SRC_STAGE1}/main.cpp
+    ${SRC_STAGE1}/ch32_crc.c
+    ${ESPRIT_MINI_SRCS}
+    ${COMMON_SRCS}
+    ${RISCV_CH32_INC}/start.cpp
+    ${RISCV_CH32_INC}/start.S
+)
+
+generate_firmware(stage1.elf ${STAGE1_SRCS})
+add_dependencies(stage1.elf stage2.elf)
+
+# Custom linker script: stage1 starts at flash address 0x00000000 (we ARE the bootloader)
+set(STAGE1_LD "${CMAKE_SOURCE_DIR}/linker/stage1.ld")
+
+target_include_directories(stage1.elf PRIVATE ${CMAKE_BINARY_DIR})
+target_link_options(stage1.elf PRIVATE
+    "-T${STAGE1_LD}"
+    "-Wl,-Map,${CMAKE_BINARY_DIR}/stage1.map"
+    ${LD_FLAGS_COMMON}
+)
+
+# Fix startup — use our start.S, not the default one
+target_link_options(stage1.elf PRIVATE
+    -Wl,-e,_start
+)
+
+# Post-process stage1
+add_custom_command(TARGET stage1.elf POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:stage1.elf> $<TARGET_FILE:stage1.elf>.bin
+    COMMAND ${CMAKE_SIZE} --format=berkeley $<TARGET_FILE:stage1.elf>
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMENT "Memory summary"
-    )
-ENDMACRO(POSTPROCESS target)
+    COMMENT "Generating stage1 binary and size summary"
+)
 
-
-IF(DEBUG_BUILD)
-  ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6160")
-ELSE()
-  ADD_DEFINITIONS("-DLN_ID_PRODUCT=0x6030")
-ENDIF()
-
-SET(ESPRIT_ROOT  ${CMAKE_SOURCE_DIR}/esprit)
-include(./mcuSelect.cmake)
-include_directories(src/freertos_config)
-include(bootloader_config.cmake)
-
-
-SET(CMAKE_TOOLCHAIN_FILE ${ESPRIT_ROOT}/esprit.cmake)
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${ESPRIT_ROOT}/cmake CACHE INTERNAL "")
-
-
-
-PROJECT(swindle_ch32_bootloader NONE) # the NONE is very important !
-ENABLE_LANGUAGE(C CXX ASM) # this is important too!
-# Generate version
-include_directories(src/freertos_config)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
-
-ADD_SUBDIRECTORY(${ESPRIT_ROOT})
-
-INCLUDE(${ESPRIT_ROOT}/setup.cmake)
-USE_LIBRARY(tinyUsb)
-include(${ESPRIT_ROOT}/libraries/tinyUsb/tiny.cmake)
-
-INCLUDE_DIRECTORIES(${ESPRIT_ROOT}/private_include)
-
-ADD_DEFINITIONS("-DUSE_CH32v3x_HW_IRQ_STACK=1")
-ADD_DEFINITIONS("-DARCH_FPU=1")
-# Update paths
-IF(FALSE)
-  IF(USE_CLANG)
-    SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain_clang.cmake)
-    configure_file( "${MINI}/clang_ram_offset_by_8.lld.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
-  ELSE(USE_CLANG)
-    SET(CMAKE_TOOLCHAIN_FILE ${MINI}/toolchain.cmake)
-    configure_file( "${MINI}/ld_ram_offset_by_8.lds.in" "${CMAKE_BINARY_DIR}/linker_script.ld" @ONLY)
-  ENDIF(USE_CLANG)
-ENDIF()
-
-ADD_DEFINITIONS("-DLN_FREERTOS_HEAP_SIZE=(${LN_MCU_RAM_SIZE}-${LN_MCU_STATIC_RAM}-1)")
-
-
-IF(DEBUG_BUILD)
-  ADD_DEFINITIONS("-O1 -g3 -DDEBUG_BUILD")
-  SET(TAG "_DEBUG" CACHE INTERNAL "")
-ELSE()
-  ADD_DEFINITIONS("-O1 -Os")
-ENDIF(DEBUG_BUILD)
-#
-SET(SRCS
-        src/main.cpp
-        src/hash_check.cpp
-        #src/xxhash.c
-        src/logger_override.cpp
-        src/check_status.cpp
-        src/go_dfu.cpp
-        src/ch32_crc.c
-#
-        )
-
-IF( LN_DISABLE_DEFAULT_IRQ_TABLE )
-  SET( SRCS ${SRCS}  src/irq_override.cpp  )
-ENDIF()
-
-IF( LN_DISABLE_DEFAULT_INIT )
-  SET( SRCS ${SRCS}  src/init_override.cpp )
-ENDIF()
-
-#src/usb_setup.cpp
-#src/interrupt_override.cpp
-SET(SEPSEP "/")
-configure_file("${CMAKE_SOURCE_DIR}/src/memory_config.h.in" "${CMAKE_BINARY_DIR}/memory_config.h" @ONLY)
-include_directories( ${ESPRIT_ROOT}/libraries/tinyUsb/include)
-GENERATE_GD32_FIRMWARE( swindle_bootloader_ch32v3x ${LNA} ${SRCS} ${EXTRA} )
-target_link_libraries( swindle_bootloader_ch32v3x PRIVATE tinyUsb esprit_single_lib)
-
-
-
-#
-#
-SET(TGT_NAME "CH32V3x")
-#
-#
-#
-MESSAGE(STATUS "=======")
-MESSAGE(STATUS "Summary")
-MESSAGE(STATUS "=======")
-
-
-math(EXPR MCU_SPEED_M "${LN_MCU_SPEED}/1000000")
-
-MESSAGE(STATUS "Built for ${LN_ARCH}/${LN_MCU} with ${LN_MCU_FLASH_SIZE} flash / ${LN_MCU_RAM_SIZE} ram")
-MESSAGE(STATUS "          MCU running at ${MCU_SPEED_M} Mhz")
-
-IF(USE_CLANG)
-  SET(COMPILER "CLANG" CACHE INTERNAL "")
-  MESSAGE(STATUS "          Compiler : CLANG")
-ELSE()
-  SET(COMPILER "GCC" CACHE INTERNAL "")
-  MESSAGE(STATUS "          Compiler : GCC")
-ENDIF()
-
-IF(DEBUG_BUILD)
-  MESSAGE(STATUS "          DEBUG BUILD")
-ENDIF()
-#
-IF(USE_CH32v3x_PURE_RAM)
-  SET(TAG "${TAG}_ram")
-ENDIF()
-#
-set_target_properties(swindle_bootloader_ch32v3x PROPERTIES OUTPUT_NAME swindle_bootloader_ch32v3x_${COMPILER}${TAG} )
-#
-MESSAGE(STATUS "Bootloader size : ${FLASH_BOOTLDR_SIZE_KB} KB")
+# ---- Summary ----
+message(STATUS "============= Build Summary =============")
+message(STATUS "MCU:        CH32V3x (RISC-V ${MARCH}/${MABI})")
+message(STATUS "Toolchain:  ${TOOLCHAIN_PATH}/${TOOLCHAIN_PREFIX}")
+message(STATUS "Bootloader: ${BOOTLOADER_SIZE_KB} KB")
+message(STATUS "App:        ${APP_SIZE_KB} KB")
+message(STATUS "==========================================")
+message(STATUS "Stage1 src: ${STAGE1_SRCS}")
+message(STATUS "Stage2 src: ${STAGE2_SRCS}")
+message(STATUS "==========================================")

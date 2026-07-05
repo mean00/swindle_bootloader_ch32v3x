@@ -1,0 +1,30 @@
+/**
+ * @file    memory_config.h.in
+ * @brief   CMake-configured flash memory layout constants.
+ *
+ * @details This file is processed by CMake's @c configure_file() to produce
+ *          @c memory_config.h.  The placeholders @c @BOOTLOADER_SIZE_KB@ and
+ *          @c @APP_SIZE_KB@ are replaced with the actual values selected
+ *          during the CMake configuration step.
+ *
+ *          The @c FLASH_DFU_STRING macro defines the DFU mode string used
+ *          by the USB DFU interface to describe the target memory region.
+ *
+ * @note    This file must not be included directly — include the generated
+ *          @c memory_config.h (or @c flash_config.h which wraps it).
+ *
+ * @ingroup common
+ */
+
+#pragma once
+
+/** @brief Bootloader partition size in kilobytes (set by CMake). */
+#define FLASH_BOOTLDR_SIZE_KB @BOOTLOADER_SIZE_KB@
+/** @brief Application partition size in kilobytes (set by CMake). */
+#define FLASH_APP_SIZE_KB @APP_SIZE_KB@
+/**
+ * @brief  DFU media descriptor string for the flash memory region.
+ * @note   The @c @SEPSEP@ tokens are replaced with semicolons during
+ *         the build process to produce a properly formatted DFU string.
+ */
+#define FLASH_DFU_STRING \"@Internal Flash @SEPSEP@0x0@SEPSEP@01*@BOOTLOADER_SIZE_KB@Ka,@APP_SIZE_KB@*001Kg\"

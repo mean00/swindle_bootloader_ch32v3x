@@ -28,3 +28,9 @@ kicad/ch32v3x/lnBMP_ch32/lnBMP_ch32-backups/
 *.old
 *auto_save*
 *autosave*
+swindle_bootloader_dev
+*.sh
+*.md
+.cline*
+*.pdf
+ch32v307_datasheet.txt
