@@ -1,39 +1,61 @@
 
-Swindle CH32V3x DFU bootloader
-========================
+# Swindle CH32V3x DFU Bootloader
 
-This is a "small" bootloader for the CH32V3x chips from WCH.
-It takes about 13 kB and is being built on top of tinyUSB.
+A USB DFU (Device Firmware Update) bootloader for **CH32V3x** RISC-V microcontrollers from WCH.
 
-The downloaded application must be linked to be at 0x4000 (i.e. base +16 kB)
+It lives in the first 16 KB of flash and lets you update the main firmware over USB without any special programmer.
+(its actual size is ~ 6 kB).
 
-There are several ways to enter DFU:
+## How to enter DFU mode
 
-- There is a signature in ram upon reboot (0xDEADBEEFCC00FFEEULL at the beginning of RAM)
-- The pin PB7 or PB14 is pulled down to ground
-- The signature of the main firmware is invalid
-  
-While in DFU, the leds connected to PB13, PC13 and/or PA8 will blink
+The bootloader jumps straight to your application unless one of these is true:
 
-Firmware signature
-------------------
+1. **Reboot marker** — your application can set a magic value in RAM before rebooting to request DFU
+2. **DFU button** — hold PB7 low at startup (external button to ground)
+3. **No valid application** — if the CRC32 check fails or no firmware is present, DFU starts automatically
 
-The layout is as follows :
+When in DFU mode the LED blinks fast so you know it's ready.
 
-- 0000 : Reset instruction (usuall j reset vector)
-- 0004 : firmware size in bytes
-- 0008 : crc32 hash of the firmware (same hash as GDB)
+## Flashing a new application
 
-If firmware size is 0x1234 and xxhash is 0x5678, the hash check is skipped.
+Once the bootloader is on the chip, use `dfu-util` from any computer:
 
-Building
---------
-Edit platformConfig to point for your toolchain.
-
-The one i use is a recent version of clang/riscv32 with picolibc.
-
-Using
-------
-
+```sh
+dfu-util -d 1d50:6030 -s 0x0004000:leave -D your_firmware.bin
 ```
-dfu-util -d 1d50:6030  -s 0x0004000:leave -D binaryfile
+
+Your application must be linked to run at flash offset **0x4000** (16 KB).
+
+## Firmware header
+
+The bootloader expects a small 12-byte header at the start of your application image:
+
+| Offset | Content                     |
+|--------|-----------------------------|
+| 0x0000 | Reset instruction (jump to entry point) |
+| 0x0004 | Firmware size in bytes      |
+| 0x0008 | CRC32 checksum of the code  |
+
+The CRC uses the same algorithm as GDB's `crc32`. If the size is `0x1234` and the checksum is `0x5678`, the CRC check is skipped — useful during development.
+
+## Building the bootloader
+
+You need a RISC-V toolchain (Clang with picolibc works well) and CMake.
+
+```sh
+cmake .. && make 
+```
+
+Edit `platformConfig.cmake` first if your toolchain is in a non-standard location.
+
+The build produces `stage1.elf` — that's the single binary you flash onto the chip (it includes the DFU handler automatically).
+
+## Initial flashing (first time)
+
+To put the bootloader on a blank chip, use any RVSWD compatible debugger (swindle, WCHlink+openOCD,...):
+
+```sh
+gdb-multiarch -ex "target extended-remote /dev/ttyBmpGdb" -ex "load stage1.elf" -ex "run"
+```
+
+After that, all future updates can go through USB DFU.
