@@ -96,6 +96,9 @@ typedef volatile struct
 #define FMC_CTL_FASTPROGRAM (1 << 16)
 /** @brief Fast erase mode enable. */
 #define FMC_CTL_FASTERASE (1 << 17)
+#define FMC_CTL_BER32 (1 << 18)
+#define FMC_CTL_BER64 (1 << 19)
+
 /** @brief Fast start (commit) bit. */
 #define FMC_CTL_FASTSTART (1 << 21)
 /** @brief Extended (high) mode enable. */
@@ -167,7 +170,7 @@ class AutoNoInterrupt
 static bool fmc_erase_page(uint32_t addr)
 {
     // CH32 FMC expects address in 0x08000000+ space
-    uint32_t fmc_addr = addr + 0x08000000;
+    uint32_t fmc_addr = addr | 0x08000000;
 
     AutoNoInterrupt noInt;
     fmc_fast_unlock();
@@ -180,6 +183,47 @@ static bool fmc_erase_page(uint32_t addr)
     uint32_t stat = FMC->STAT;
     FMC->STAT = FMC_STAT_WP_ENDF; // clear end-of-operation
     FMC->CTL &= ~FMC_CTL_FASTERASE;
+    FMC->CTL &= ~FMC_CTL_START;
+
+    if (stat & (FMC_STAT_PG_ERR | FMC_STAT_WP_ERR))
+    {
+        FMC->STAT = FMC_STAT_PG_ERR | FMC_STAT_WP_ERR;
+        return false;
+    }
+    if (!(stat & FMC_STAT_WP_ENDF))
+        return false;
+
+    // Verify the page is actually erased
+    uint32_t *p = (uint32_t *)fmc_addr;
+    for (int i = 0; i < 64; i++)
+    {
+        if (p[i] != 0xE339E339)
+            return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief  Erase a 32KB block using CH32 fast block erase mode.
+ * @param addr  Physical flash address (e.g. 0x0000xxxx).
+ */
+static bool fmc_erase_32k(uint32_t addr)
+{
+    // CH32 FMC expects address in 0x08000000+ space
+    uint32_t fmc_addr = addr | 0x08000000;
+
+    AutoNoInterrupt noInt;
+    fmc_fast_unlock();
+
+    FMC->CTL |= FMC_CTL_BER32;
+    FMC->ADDR = fmc_addr;
+    FMC->CTL |= FMC_CTL_START;
+    fmc_wait_busy();
+
+    uint32_t stat = FMC->STAT;
+    FMC->STAT = FMC_STAT_WP_ENDF; // clear end-of-operation
+    FMC->CTL &= ~FMC_CTL_BER32;
     FMC->CTL &= ~FMC_CTL_START;
 
     if (stat & (FMC_STAT_PG_ERR | FMC_STAT_WP_ERR))
@@ -220,7 +264,7 @@ static bool fmc_erase_range(uint32_t startAddress, int sizeInKBytes)
  */
 static bool fmc_write_block(uint32_t addr, const uint8_t *data)
 {
-    uint32_t fmc_addr = addr + 0x08000000;
+    uint32_t fmc_addr = addr | 0x08000000;
     volatile uint32_t *prog = (volatile uint32_t *)fmc_addr;
     AutoNoInterrupt noInt;
 
@@ -306,7 +350,7 @@ static bool fmc_page_is_erased(uint32_t addr)
     const uint32_t *physical_page = (const uint32_t *)(addr | 0x08000000);
     for (int i = 0; i < 64; i++)
     {
-        if (physical_page[i] != 0xFFFFFFFF && physical_page[i] != 0xE339E339)
+        if (physical_page[i] != 0xE339E339)
             return false;
     }
     return true;

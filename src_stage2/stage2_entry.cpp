@@ -23,7 +23,7 @@
  */
 
 #include "stdint.h"
-extern void lnInitSystemClock();
+extern void lnInitSystemClock_limited();
 extern void stage2_main();
 extern void stage2_irq_init(void);
 extern const char __data_begin__, __data_end__;
@@ -59,15 +59,12 @@ extern "C" void stage2_cpp_entry(void)
                    "  j lp1\n"
                    "end_lp1:\n"
                    :
-                   : "r"((uint32_t *)&__data_lma__),
-                     "r"((uint32_t *)&__data_begin__),
-                     "r"((uint32_t *)&__data_end__),
-                     "r"((uint32_t *)&__bss_begin__),
-                     "r"((uint32_t *)&__bss_end__)
+                   : "r"((uint32_t *)&__data_lma__), "r"((uint32_t *)&__data_begin__), "r"((uint32_t *)&__data_end__),
+                     "r"((uint32_t *)&__bss_begin__), "r"((uint32_t *)&__bss_end__)
                    : "t0", "t1", "t2", "t3", "memory");
 
     // Clock init before any constructor that might read SystemCoreClock
-    lnInitSystemClock();
+    lnInitSystemClock_limited();
 
     // Global constructors
     __libc_init_array();
@@ -77,8 +74,9 @@ extern "C" void stage2_cpp_entry(void)
 
     // Main DFU loop
     stage2_main();
-    
-    while(1);
+
+    while (1)
+        ;
 }
 
 /**
@@ -90,8 +88,6 @@ extern "C" void stage2_cpp_entry(void)
  */
 extern "C" __attribute__((section(".text.entry"), naked)) void stage2_entry(void)
 {
-    __asm volatile(
-        "  li sp, 0x2000FFF0\n"
-        "  tail stage2_cpp_entry\n"
-    );
+    __asm volatile("  li sp, 0x2000FFF0\n"
+                   "  tail stage2_cpp_entry\n");
 }

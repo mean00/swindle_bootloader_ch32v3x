@@ -177,7 +177,7 @@ int main(void)
 
     toggle_led();
 
-    //    go_dfu = 1;
+    // go_dfu = 1;
 
     if (!go_dfu)
     {

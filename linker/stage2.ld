@@ -57,31 +57,31 @@ SECTIONS
     } > REGION_RODATA
 
 
-    PROVIDE(__data_lma__ = .);
-    .data :
+    .data : ALIGN(8)
     {
-        PROVIDE(__data_begin__ = .);
-        . = ALIGN(8);
         *(.sdata*)
         *(.gnu.linkonce.s.*)
         *(.got.plt) *(.got)
         *(.data .data.* .gnu.linkonce.d.*)
         . = ALIGN(8);
-        PROVIDE(__data_end__ = .);
     } > REGION_DATA AT> REGION_TEXT
 
-    .bss :
+    PROVIDE(__data_lma__ = LOADADDR(.data));
+    PROVIDE(__data_begin__ = ADDR(.data));
+    PROVIDE(__data_end__ = ADDR(.data) + SIZEOF(.data));
+
+    .bss : ALIGN(8)
     {
-        . = ALIGN(8);
-        PROVIDE(__bss_begin__ = .);
         *(.sbss*)
         *(.gnu.linkonce.sb.*)
         *(.bss .bss.* .gnu.linkonce.b.*)
         *(COMMON)
         . = ALIGN(8);
-        PROVIDE(__bss_end__ = .);
-        _end = __bss_end__;
     } > REGION_BSS
+
+    PROVIDE(__bss_begin__ = ADDR(.bss));
+    PROVIDE(__bss_end__ = ADDR(.bss) + SIZEOF(.bss));
+    PROVIDE(_end = __bss_end__);
 
     PROVIDE(_sp = ORIGIN(ram) + LENGTH(ram));
 

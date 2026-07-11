@@ -424,6 +424,10 @@ enum dfu_state
 /** @brief CH32V3x flash memory sector (page) size in bytes. */
 #define FLASH_SECTOR_SIZE 256
 
+/** @brief DFU protocol sector size presented to the host (in KB and Bytes). */
+#define DFU_SECTOR_SIZE_KB 4
+#define DFU_SECTOR_SIZE (DFU_SECTOR_SIZE_KB * 1024)
+
 /**
  * @brief  Initialise the USB peripheral and connect to the host.
  * @note   Must be called after clock/interrupt init and before @c do_usb_poll().

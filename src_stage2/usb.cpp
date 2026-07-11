@@ -17,49 +17,46 @@
  */
 
 #include "usb.h"
-#include "usb_vid_pid.h"
 #include "dfu_name.h"
 #include "esprit.h"
 #include "flash_config.h"
 #include "registers.h"
-
+#include "usb_vid_pid.h"
+//
+#include "printf.h"
 // ========== USB descriptor data ==========
 
 /** @brief String descriptor indices used in the USB descriptors. */
-#define STRIDX_MFR      1   /**< Manufacturer string.       */
-#define STRIDX_PRODUCT  2   /**< Product name string.       */
-#define STRIDX_SERIAL   3   /**< Serial number string.      */
-#define STRIDX_DFUSE    4   /**< DfuSe memory layout string. */
+#define STRIDX_MFR 1     /**< Manufacturer string.       */
+#define STRIDX_PRODUCT 2 /**< Product name string.       */
+#define STRIDX_SERIAL 3  /**< Serial number string.      */
+#define STRIDX_DFUSE 4   /**< DfuSe memory layout string. */
 
 /** @brief EP0 maximum packet size. */
-#define EP0_MAX_PACKET  64
+#define EP0_MAX_PACKET 64
 
-static const struct usb_device_descriptor dev_desc = {
-    .bLength         = USB_DT_DEVICE_SIZE,
-    .bDescriptorType = USB_DT_DEVICE,
-    .bcdUSB          = USB_VERSION_1_1,
-    .bDeviceClass    = 0x00,
-    .bDeviceSubClass = 0x00,
-    .bDeviceProtocol = 0x00,
-    .bMaxPacketSize0 = EP0_MAX_PACKET,
-    .idVendor        = USB_VID,
-    .idProduct       = USB_PID,
-    .bcdDevice       = 0x0100,
-    .iManufacturer   = STRIDX_MFR,
-    .iProduct        = STRIDX_PRODUCT,
-    .iSerialNumber   = STRIDX_SERIAL,
-    .bNumConfigurations = 1
-};
+static const struct usb_device_descriptor dev_desc = {.bLength = USB_DT_DEVICE_SIZE,
+                                                      .bDescriptorType = USB_DT_DEVICE,
+                                                      .bcdUSB = USB_VERSION_1_1,
+                                                      .bDeviceClass = 0x00,
+                                                      .bDeviceSubClass = 0x00,
+                                                      .bDeviceProtocol = 0x00,
+                                                      .bMaxPacketSize0 = EP0_MAX_PACKET,
+                                                      .idVendor = USB_VID,
+                                                      .idProduct = USB_PID,
+                                                      .bcdDevice = 0x0100,
+                                                      .iManufacturer = STRIDX_MFR,
+                                                      .iProduct = STRIDX_PRODUCT,
+                                                      .iSerialNumber = STRIDX_SERIAL,
+                                                      .bNumConfigurations = 1};
 
-static const struct usb_dfu_descriptor dfu_func_desc = {
-    .bLength         = sizeof(struct usb_dfu_descriptor),
-    .bDescriptorType = DFU_FUNCTIONAL,
-    .bmAttributes    = USB_DFU_CAN_DOWNLOAD | USB_DFU_CAN_UPLOAD
-                       | USB_DFU_MANIFEST_TOLERANT | USB_DFU_WILL_DETACH,
-    .wDetachTimeout  = 1000,
-    .wTransferSize   = DFU_TRANSFER_SIZE,
-    .bcdDFUVersion   = 0x0110
-};
+static const struct usb_dfu_descriptor dfu_func_desc = {.bLength = sizeof(struct usb_dfu_descriptor),
+                                                        .bDescriptorType = DFU_FUNCTIONAL,
+                                                        .bmAttributes = USB_DFU_CAN_DOWNLOAD | USB_DFU_CAN_UPLOAD |
+                                                                        USB_DFU_MANIFEST_TOLERANT | USB_DFU_WILL_DETACH,
+                                                        .wDetachTimeout = 1000,
+                                                        .wTransferSize = DFU_TRANSFER_SIZE,
+                                                        .bcdDFUVersion = 0x0110};
 
 // ========== USB transfer state ==========
 
@@ -69,7 +66,13 @@ static uint8_t dfu_rx_buffer[DFU_TRANSFER_SIZE] __attribute__((aligned(4)));
 static uint16_t dfu_rx_offset = 0;
 
 // Control transfer state machine
-enum ctrl_phase { CTRL_IDLE, CTRL_DATA_IN, CTRL_DATA_OUT, CTRL_STATUS };
+enum ctrl_phase
+{
+    CTRL_IDLE,
+    CTRL_DATA_IN,
+    CTRL_DATA_OUT,
+    CTRL_STATUS
+};
 static enum ctrl_phase ctrl_phase = CTRL_IDLE;
 static const uint8_t *ctrl_data_ptr = NULL;
 static uint16_t ctrl_data_len = 0;
@@ -77,14 +80,12 @@ static uint16_t ctrl_data_remaining = 0;
 static uint8_t ctrl_req_type = 0;
 static uint8_t ctrl_request = 0;
 static uint8_t usb_dev_addr = 0;
-static bool ep0_tog = false;  // data toggle for EP0
+static bool ep0_tog = false; // data toggle for EP0
 
 // ========== Low-level helpers ==========
 
 static void ep0_tx_nak(void)
-{
-    EP_TX_CTRL(0) = USBFS_EP_RES_NAK;
-}
+{ EP_TX_CTRL(0) = USBFS_EP_RES_NAK; }
 
 static void ep0_tx_stall(void)
 {
@@ -93,14 +94,10 @@ static void ep0_tx_stall(void)
 }
 
 static void ep0_rx_ack(void)
-{
-    EP_RX_CTRL(0) = USBFS_EP_RES_ACK;
-}
+{ EP_RX_CTRL(0) = USBFS_EP_RES_ACK; }
 
 static void ep0_rx_stall(void)
-{
-    EP_RX_CTRL(0) = USBFS_EP_RES_STALL;
-}
+{ EP_RX_CTRL(0) = USBFS_EP_RES_STALL; }
 
 /**
  * @brief  Send data on EP0 (IN transaction).
@@ -126,9 +123,7 @@ static void ep0_send(const uint8_t *data, uint16_t len)
  * @details Sets EP0 RX to ACK so the host can send data.
  */
 static void ep0_recv(void)
-{
-    EP_RX_CTRL(0) = USBFS_EP_RES_ACK;
-}
+{ EP_RX_CTRL(0) = USBFS_EP_RES_ACK; }
 
 // ========== Standard request handlers ==========
 
@@ -138,144 +133,136 @@ static void ep0_recv(void)
  * @param data Output: pointer to response data.
  * @param len  Output: length of response data.
  */
-static void handle_std_request(const struct usb_setup_packet *req,
-                                const uint8_t **data, uint16_t *len)
+static void handle_std_request(const struct usb_setup_packet *req, const uint8_t **data, uint16_t *len)
 {
     *data = NULL;
     *len = 0;
 
     switch (req->bRequest)
     {
-    case USB_REQ_SET_ADDRESS:  // SET_ADDRESS
-        usb_dev_addr = req->wValue & 0x7F;
-        // Address is applied after status stage
-        break;
+        case USB_REQ_SET_ADDRESS: // SET_ADDRESS
+            usb_dev_addr = req->wValue & 0x7F;
+            // Address is applied after status stage
+            break;
 
-    case USB_REQ_GET_DESCRIPTOR:  // GET_DESCRIPTOR
-    {
-        uint8_t desc_type = (req->wValue >> 8) & 0xFF;
-        uint8_t desc_idx  = req->wValue & 0xFF;
-
-        if (desc_type == USB_DT_DEVICE)
+        case USB_REQ_GET_DESCRIPTOR: // GET_DESCRIPTOR
         {
-            *data = (const uint8_t *)&dev_desc;
-            *len  = sizeof(dev_desc);
-        }
-        else if (desc_type == USB_DT_CONFIG)
-        {
-            static __attribute__((aligned(4))) uint8_t cfg_buf[EP0_MAX_PACKET];
-            uint8_t *p = cfg_buf;
+            uint8_t desc_type = (req->wValue >> 8) & 0xFF;
+            uint8_t desc_idx = req->wValue & 0xFF;
 
-            // Configuration descriptor
-            struct usb_config_descriptor cfg = {
-                .bLength = USB_DT_CONFIG_SIZE, .bDescriptorType = USB_DT_CONFIG,
-                .wTotalLength = USB_DT_CONFIG_SIZE + USB_DT_INTERFACE_SIZE
-                                + sizeof(struct usb_dfu_descriptor),
-                .bNumInterfaces = 1, .bConfigurationValue = 1,
-                .iConfiguration = 0, .bmAttributes = USB_CONFIG_SELF_POWERED,
-                .bMaxPower = 50
-            };
-            memcpy(p, &cfg, USB_DT_CONFIG_SIZE); p += USB_DT_CONFIG_SIZE;
-
-            // Interface descriptor (DFU)
-            struct usb_interface_descriptor ifc = {
-                .bLength = USB_DT_INTERFACE_SIZE, .bDescriptorType = USB_DT_INTERFACE,
-                .bInterfaceNumber = 0, .bAlternateSetting = 0,
-                .bNumEndpoints = 0, .bInterfaceClass = USB_DFU_CLASS,
-                .bInterfaceSubClass = USB_DFU_SUBCLASS, .bInterfaceProtocol = USB_DFU_PROTOCOL,
-                .iInterface = STRIDX_DFUSE
-            };
-            memcpy(p, &ifc, USB_DT_INTERFACE_SIZE); p += USB_DT_INTERFACE_SIZE;
-
-            // DFU functional descriptor
-            memcpy(p, &dfu_func_desc, sizeof(dfu_func_desc));
-            p += sizeof(dfu_func_desc);
-
-            *data = cfg_buf;
-            *len  = (uint16_t)(p - cfg_buf);
-        }
-        else if (desc_type == USB_DT_STRING)  // String
-        {
-            static __attribute__((aligned(4))) uint8_t sbuf[100];
-            uint8_t idx = req->wValue & 0xFF;
-            uint8_t *sp = sbuf;
-
-            if (idx == 0)  // LANGIDs
+            if (desc_type == USB_DT_DEVICE)
             {
-                sbuf[0] = USB_DT_STRING_HEADER + 2;  // 2 bytes of language ID
-                sbuf[1] = USB_DT_STRING;
-                sbuf[2] = USB_LANGID_ENGLISH_US & 0xFF;
-                sbuf[3] = (USB_LANGID_ENGLISH_US >> 8) & 0xFF;
-                *len = USB_DT_STRING_HEADER + 2;
+                *data = (const uint8_t *)&dev_desc;
+                *len = sizeof(dev_desc);
             }
-            else
+            else if (desc_type == USB_DT_CONFIG)
             {
-                const char *s = "";
-                if (idx == STRIDX_MFR) s = DFU_STRING_MFR;
-                else if (idx == STRIDX_PRODUCT) s = DFU_STRING_PRODUCT;
-                else if (idx == STRIDX_SERIAL) s = DFU_STRING_SERIAL;
-                else if (idx == STRIDX_DFUSE)
+                static __attribute__((aligned(4))) uint8_t cfg_buf[EP0_MAX_PACKET];
+                uint8_t *p = cfg_buf;
+
+                // Configuration descriptor
+                struct usb_config_descriptor cfg = {.bLength = USB_DT_CONFIG_SIZE,
+                                                    .bDescriptorType = USB_DT_CONFIG,
+                                                    .wTotalLength = USB_DT_CONFIG_SIZE + USB_DT_INTERFACE_SIZE +
+                                                                    sizeof(struct usb_dfu_descriptor),
+                                                    .bNumInterfaces = 1,
+                                                    .bConfigurationValue = 1,
+                                                    .iConfiguration = 0,
+                                                    .bmAttributes = USB_CONFIG_SELF_POWERED,
+                                                    .bMaxPower = 50};
+                memcpy(p, &cfg, USB_DT_CONFIG_SIZE);
+                p += USB_DT_CONFIG_SIZE;
+
+                // Interface descriptor (DFU)
+                struct usb_interface_descriptor ifc = {.bLength = USB_DT_INTERFACE_SIZE,
+                                                       .bDescriptorType = USB_DT_INTERFACE,
+                                                       .bInterfaceNumber = 0,
+                                                       .bAlternateSetting = 0,
+                                                       .bNumEndpoints = 0,
+                                                       .bInterfaceClass = USB_DFU_CLASS,
+                                                       .bInterfaceSubClass = USB_DFU_SUBCLASS,
+                                                       .bInterfaceProtocol = USB_DFU_PROTOCOL,
+                                                       .iInterface = STRIDX_DFUSE};
+                memcpy(p, &ifc, USB_DT_INTERFACE_SIZE);
+                p += USB_DT_INTERFACE_SIZE;
+
+                // DFU functional descriptor
+                memcpy(p, &dfu_func_desc, sizeof(dfu_func_desc));
+                p += sizeof(dfu_func_desc);
+
+                *data = cfg_buf;
+                *len = (uint16_t)(p - cfg_buf);
+            }
+            else if (desc_type == USB_DT_STRING) // String
+            {
+                static __attribute__((aligned(4))) uint8_t sbuf[100];
+                uint8_t idx = req->wValue & 0xFF;
+                uint8_t *sp = sbuf;
+
+                if (idx == 0) // LANGIDs
                 {
-                    // ST DfuSe memory layout descriptor string.
-                    // Format: @<Name>/<StartAddrHex>/<SegDef>
-                    // Build:  @Internal Flash /0x0/00*YYYKg
-                    // Where YYY = app size in KB.
-                    // Built manually to avoid pulling sprintf / stdio syscalls.
-                    static char dfuse_str[60];
-                    uint32_t app_size = FLASH_APP_SIZE_KB;
-                    char *p = dfuse_str;
-
-                    // "@Internal Flash /0x0/00*"
-                    const char prefix[] = "@Internal Flash /0x0/00*";
-                    for (const char *cp = prefix; *cp; cp++)
-                        *p++ = *cp;
-
-                    // App size in decimal (up to 3 digits)
-                    char dec[4];
-                    char *dp = dec;
-                    uint32_t n = app_size;
-                    do { *dp++ = '0' + (n % 10); n /= 10; } while (n);
-                    // Reverse decimal digits
-                    while (dp > dec) { *p++ = *--dp; }
-
-                    // "Kg\0"
-                    *p++ = 'K';
-                    *p++ = 'g';
-                    *p++ = '\0';
-
-                    s = dfuse_str;
+                    sbuf[0] = USB_DT_STRING_HEADER + 2; // 2 bytes of language ID
+                    sbuf[1] = USB_DT_STRING;
+                    sbuf[2] = USB_LANGID_ENGLISH_US & 0xFF;
+                    sbuf[3] = (USB_LANGID_ENGLISH_US >> 8) & 0xFF;
+                    *len = USB_DT_STRING_HEADER + 2;
                 }
+                else
+                {
+                    const char *s = "";
+                    switch (idx)
+                    {
+                        case STRIDX_MFR: s = DFU_STRING_MFR; break;
+                        case STRIDX_PRODUCT: s = DFU_STRING_PRODUCT; break;
+                        case STRIDX_SERIAL: s = DFU_STRING_SERIAL; break;
+                        case STRIDX_DFUSE:
+                        {
+                            // ST DfuSe memory layout descriptor string.
+                            // Format: @<Name>/<StartAddrHex>/<SegDef>
+                            // Build:  @Internal Flash /0x0/00*YYYKg
+                            // Where YYY = app size in KB.
+                            // Built manually to avoid pulling sprintf / stdio syscalls.
+                            static char dfuse_str[60];
+                            snprintf(dfuse_str, 59, "@Internal Flash  /0x00000000/%d*%04dKa,%d*%04dKg",
+                                     FLASH_BOOTLDR_SIZE_KB / DFU_SECTOR_SIZE_KB, DFU_SECTOR_SIZE_KB,
+                                     FLASH_APP_SIZE_KB / DFU_SECTOR_SIZE_KB, DFU_SECTOR_SIZE_KB);
+                            s = dfuse_str;
+                        }
+                        break;
+                    }
 
-                *sp++ = USB_DT_STRING_HEADER + (uint8_t)strlen(s) * 2;
-                *sp++ = USB_DT_STRING;  // string descriptor type
-                while (*s) { *sp++ = *s++; *sp++ = 0; }
-                *len = (uint16_t)(sp - sbuf);
+                    *sp++ = USB_DT_STRING_HEADER + (uint8_t)strlen(s) * 2;
+                    *sp++ = USB_DT_STRING; // string descriptor type
+                    while (*s)
+                    {
+                        *sp++ = *s++;
+                        *sp++ = 0;
+                    }
+                    *len = (uint16_t)(sp - sbuf);
+                }
+                *data = sbuf;
             }
-            *data = sbuf;
+            break;
         }
-        break;
-    }
 
-    case 0x08:  // GET_CONFIGURATION
-    {
-        static uint8_t cfg_val = 1;
-        *data = &cfg_val;
-        *len = 1;
-        break;
-    }
+        case 0x08: // GET_CONFIGURATION
+        {
+            static uint8_t cfg_val = 1;
+            *data = &cfg_val;
+            *len = 1;
+            break;
+        }
 
-    case 0x09:  // SET_CONFIGURATION
-        break;  // nothing to do, we're in DFU mode
+        case 0x09: // SET_CONFIGURATION
+            break; // nothing to do, we're in DFU mode
 
-    default:
-        break;
+        default: break;
     }
 }
 
 // ========== Request routing ==========
 
-extern int  dfu_handle_request(const struct usb_setup_packet *req,
-                                const uint8_t **data, uint16_t *len);
+extern int dfu_handle_request(const struct usb_setup_packet *req, const uint8_t **data, uint16_t *len);
 extern void dfu_handle_data(const uint8_t *data, uint16_t len);
 
 /**
@@ -286,8 +273,7 @@ extern void dfu_handle_data(const uint8_t *data, uint16_t len);
  * @param data Output: pointer to response data.
  * @param len  Output: length of response data.
  */
-static void route_request(const struct usb_setup_packet *req,
-                           const uint8_t **data, uint16_t *len)
+static void route_request(const struct usb_setup_packet *req, const uint8_t **data, uint16_t *len)
 {
     *data = NULL;
     *len = 0;
@@ -324,7 +310,7 @@ void usb_init(void)
     // Initialize registers
     USB->BASE_CTRL = USBFS_CTRL_SYS_CTRL | USBFS_CTRL_INT_BUSY | USBFS_CTRL_DMA_EN;
     USB->UDEV_CTRL = USBFS_UDEV_CTRL_PD_DIS | USBFS_UDEV_CTRL_PORT_EN;
-    USB->DEV_ADDR  = 0x00;
+    USB->DEV_ADDR = 0x00;
 
     // Clear pending interrupts
     USB->INT_FG = 0xFF;
@@ -342,7 +328,7 @@ void usb_init(void)
     USB->UEP4_1_MOD = 0xCC;
     USB->UEP2_3_MOD = 0xCC;
     USB->UEP5_6_MOD = 0xCC;
-    USB->UEP7_MOD   = 0x0C;
+    USB->UEP7_MOD = 0x0C;
 
     for (uint8_t ep = 1; ep < 8; ep++)
     {
@@ -382,98 +368,109 @@ void do_usb_poll(void)
     {
         // Read endpoint and token from INT_ST
         uint8_t int_st = USB->INT_ST;
-        uint8_t ep  = int_st & USBFS_INT_ST_ENDP_MASK;
+        uint8_t ep = int_st & USBFS_INT_ST_ENDP_MASK;
         uint8_t token = USBFS_INT_ST_TOKEN(int_st);
 
         switch (token)
         {
-        case PID_SETUP:
-            // Setup packet received in EP0 DMA buffer
-            // Clear any stall first
-            EP_TX_CTRL(0) = USBFS_EP_RES_NAK;
-            EP_RX_CTRL(0) = USBFS_EP_RES_ACK;
+            case PID_SETUP:
+                // Setup packet received in EP0 DMA buffer
+                // Clear any stall first
+                EP_TX_CTRL(0) = USBFS_EP_RES_NAK;
+                EP_RX_CTRL(0) = USBFS_EP_RES_ACK;
 
-            // Parse the setup packet from the EP0 DMA buffer
-            {
-                const struct usb_setup_packet *req =
-                    (const struct usb_setup_packet *)ep0_buffer;
-
-                ctrl_req_type = req->bmRequestType;
-                ctrl_request  = req->bRequest;
-                ep0_tog = true;  // reset toggle for control transfer
-
-                if (req->wLength == 0)
+                // Parse the setup packet from the EP0 DMA buffer
                 {
-                    // No data stage — go directly to status
-                    const uint8_t *d = NULL;
-                    uint16_t l = 0;
-                    route_request(req, &d, &l);
+                    const struct usb_setup_packet *req = (const struct usb_setup_packet *)ep0_buffer;
 
-                    if (l == 0)
+                    ctrl_req_type = req->bmRequestType;
+                    ctrl_request = req->bRequest;
+                    ep0_tog = true; // reset toggle for control transfer
+
+                    if (req->wLength == 0)
                     {
-                        // Status: send ZLP
-                        ctrl_phase = CTRL_STATUS;
-                        ep0_send(NULL, 0);
+                        // No data stage — go directly to status
+                        const uint8_t *d = NULL;
+                        uint16_t l = 0;
+                        route_request(req, &d, &l);
+
+                        if (l == 0)
+                        {
+                            // Status: send ZLP
+                            ctrl_phase = CTRL_STATUS;
+                            ep0_send(NULL, 0);
+                        }
+                        else
+                        {
+                            // Send data, then status
+                            ctrl_data_ptr = d;
+                            ctrl_data_len = l;
+                            ctrl_data_remaining = l;
+                            ctrl_phase = CTRL_DATA_IN;
+                            ep0_send(d, (l > EP0_MAX_PACKET) ? EP0_MAX_PACKET : l);
+                        }
                     }
-                    else
+                    else if (req->bmRequestType & USB_DIR_IN)
                     {
-                        // Send data, then status
+                        // Device-to-host: send data
+                        const uint8_t *d = NULL;
+                        uint16_t l = 0;
+                        route_request(req, &d, &l);
+
+                        if (l > req->wLength)
+                            l = req->wLength;
+
                         ctrl_data_ptr = d;
                         ctrl_data_len = l;
                         ctrl_data_remaining = l;
                         ctrl_phase = CTRL_DATA_IN;
                         ep0_send(d, (l > EP0_MAX_PACKET) ? EP0_MAX_PACKET : l);
                     }
-                }
-                else if (req->bmRequestType & USB_DIR_IN)
-                {
-                    // Device-to-host: send data
-                    const uint8_t *d = NULL;
-                    uint16_t l = 0;
-                    route_request(req, &d, &l);
-
-                    if (l > req->wLength)
-                        l = req->wLength;
-
-                    ctrl_data_ptr = d;
-                    ctrl_data_len = l;
-                    ctrl_data_remaining = l;
-                    ctrl_phase = CTRL_DATA_IN;
-                    ep0_send(d, (l > EP0_MAX_PACKET) ? EP0_MAX_PACKET : l);
-                }
-                else
-                {
-                    // Host-to-device: receive data
-                    const uint8_t *d = NULL;
-                    uint16_t l = 0;
-                    route_request(req, &d, &l);
-
-                    ctrl_phase = CTRL_DATA_OUT;
-                    ctrl_data_remaining = req->wLength;
-                    dfu_rx_offset = 0;
-                    ep0_recv();
-                }
-            }
-            break;
-
-        case PID_IN:
-            // IN transfer complete on EP
-            if (ep == 0)
-            {
-                if (ctrl_phase == CTRL_DATA_IN && ctrl_data_remaining > 0)
-                {
-                    uint16_t sent = (ctrl_data_remaining > EP0_MAX_PACKET) ? EP0_MAX_PACKET : (uint16_t)ctrl_data_remaining;
-                    ctrl_data_remaining -= sent;
-
-                    if (ctrl_data_remaining > 0)
-                    {
-                        // Send next chunk
-                        uint16_t s = (ctrl_data_remaining > EP0_MAX_PACKET) ? EP0_MAX_PACKET : (uint16_t)ctrl_data_remaining;
-                        ep0_send(ctrl_data_ptr + (ctrl_data_len - ctrl_data_remaining), s);
-                    }
                     else
                     {
-                        // All data sent — status phase
+                        // Host-to-device: receive data
+                        const uint8_t *d = NULL;
+                        uint16_t l = 0;
+                        route_request(req, &d, &l);
+
+                        ctrl_phase = CTRL_DATA_OUT;
+                        ctrl_data_remaining = req->wLength;
+                        dfu_rx_offset = 0;
+                        ep0_recv();
+                    }
+                }
+                break;
+
+            case PID_IN:
+                // IN transfer complete on EP
+                if (ep == 0)
+                {
+                    if (ctrl_phase == CTRL_DATA_IN && ctrl_data_remaining > 0)
+                    {
+                        uint16_t sent =
+                            (ctrl_data_remaining > EP0_MAX_PACKET) ? EP0_MAX_PACKET : (uint16_t)ctrl_data_remaining;
+                        ctrl_data_remaining -= sent;
+
+                        if (ctrl_data_remaining > 0)
+                        {
+                            // Send next chunk
+                            uint16_t s =
+                                (ctrl_data_remaining > EP0_MAX_PACKET) ? EP0_MAX_PACKET : (uint16_t)ctrl_data_remaining;
+                            ep0_send(ctrl_data_ptr + (ctrl_data_len - ctrl_data_remaining), s);
+                        }
+                        else
+                        {
+                            // All data sent — status phase
+                            ctrl_phase = CTRL_IDLE;
+
+                            // Apply deferred set address
+                            if (ctrl_request == USB_REQ_SET_ADDRESS)
+                                USB->DEV_ADDR = usb_dev_addr;
+                        }
+                    }
+                    else if (ctrl_phase == CTRL_STATUS)
+                    {
+                        // Status phase complete
                         ctrl_phase = CTRL_IDLE;
 
                         // Apply deferred set address
@@ -481,57 +478,46 @@ void do_usb_poll(void)
                             USB->DEV_ADDR = usb_dev_addr;
                     }
                 }
-                else if (ctrl_phase == CTRL_STATUS)
+                break;
+
+            case PID_OUT:
+                // OUT data received
+                if (ep == 0 && ctrl_phase == CTRL_DATA_OUT)
                 {
-                    // Status phase complete
-                    ctrl_phase = CTRL_IDLE;
+                    uint16_t rx_len = USB->RX_LEN;
 
-                    // Apply deferred set address
-                    if (ctrl_request == USB_REQ_SET_ADDRESS)
-                        USB->DEV_ADDR = usb_dev_addr;
-                }
-            }
-            break;
-
-        case PID_OUT:
-            // OUT data received
-            if (ep == 0 && ctrl_phase == CTRL_DATA_OUT)
-            {
-                uint16_t rx_len = USB->RX_LEN;
-                
-                if (dfu_rx_offset + rx_len <= sizeof(dfu_rx_buffer))
-                {
-                    memcpy(dfu_rx_buffer + dfu_rx_offset, ep0_buffer, rx_len);
-                    dfu_rx_offset += rx_len;
-                }
-
-                ctrl_data_remaining -= rx_len;
-
-                if (ctrl_data_remaining == 0 || rx_len < EP0_MAX_PACKET)
-                {
-                    // All data received — pass it to DFU handler
-                    if (ctrl_request == DFU_DNLOAD && dfu_rx_offset > 0)
+                    if (dfu_rx_offset + rx_len <= sizeof(dfu_rx_buffer))
                     {
-                        dfu_handle_data(dfu_rx_buffer, dfu_rx_offset);
+                        memcpy(dfu_rx_buffer + dfu_rx_offset, ep0_buffer, rx_len);
+                        dfu_rx_offset += rx_len;
                     }
-                    else if (ctrl_request == DFU_DNLOAD && dfu_rx_offset == 0)
-                    {
-                        // zero-length DNLOAD (Manifest phase)
-                        dfu_handle_data(dfu_rx_buffer, 0);
-                    }
-                    
-                    ctrl_phase = CTRL_IDLE;
-                    ep0_send(NULL, 0);  // send ZLP as ACK
-                }
-                else
-                {
-                    ep0_recv();  // more data expected
-                }
-            }
-            break;
 
-        default:
-            break;
+                    ctrl_data_remaining -= rx_len;
+
+                    if (ctrl_data_remaining == 0 || rx_len < EP0_MAX_PACKET)
+                    {
+                        // All data received — pass it to DFU handler
+                        if (ctrl_request == DFU_DNLOAD && dfu_rx_offset > 0)
+                        {
+                            dfu_handle_data(dfu_rx_buffer, dfu_rx_offset);
+                        }
+                        else if (ctrl_request == DFU_DNLOAD && dfu_rx_offset == 0)
+                        {
+                            // zero-length DNLOAD (Manifest phase)
+                            dfu_handle_data(dfu_rx_buffer, 0);
+                        }
+
+                        ctrl_phase = CTRL_IDLE;
+                        ep0_send(NULL, 0); // send ZLP as ACK
+                    }
+                    else
+                    {
+                        ep0_recv(); // more data expected
+                    }
+                }
+                break;
+
+            default: break;
         }
 
         // Clear transfer interrupt flag

@@ -69,12 +69,8 @@ SECTIONS
         KEEP(*(.dtors))
     } >rom AT>rom
 
-    . = ALIGN(4);
-    _data_lma = .;
-
-    .data : AT(_data_lma)
+    .data : ALIGN(8)
     {
-        _data_begin = .;
         *(.gnu.linkonce.r.*)
         *(.data .data.*)
         *(.gnu.linkonce.d.*)
@@ -89,20 +85,24 @@ SECTIONS
         *(.srodata.cst2)
         *(.srodata .srodata.*)
         . = ALIGN(4);
-        _data_end = .;
-    } >ram
+    } >ram AT>rom
 
-    .bss (NOLOAD) :
+    PROVIDE(_data_begin = ADDR(.data));
+    PROVIDE(_data_end = ADDR(.data) + SIZEOF(.data));
+    PROVIDE(_data_lma = LOADADDR(.data));
+
+    .bss (NOLOAD) : ALIGN(4)
     {
-        _bss_begin = .;
         *(.sbss*)
         *(.gnu.linkonce.sb.*)
         *(.bss .bss.*)
         *(.gnu.linkonce.b.*)
         *(COMMON)
         . = ALIGN(4);
-        _bss_end = .;
     } >ram
+
+    PROVIDE(_bss_begin = ADDR(.bss));
+    PROVIDE(_bss_end = ADDR(.bss) + SIZEOF(.bss));
 
     PROVIDE(_end = .);
     PROVIDE(end = .);

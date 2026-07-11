@@ -75,8 +75,9 @@ set(STAGE2_SRCS
     ${CMAKE_SOURCE_DIR}/esprit_mini/irq.cpp
     ${COMMON_SRCS}
 )
-
+add_subdirectory(${SRC_STAGE2}/embedded_printf)
 generate_firmware(prebuild_stage2 ${STAGE2_SRCS})
+target_link_libraries(prebuild_stage2 PRIVATE embeddedPrintf)
 
 # Custom linker script for stage2 (RAM)
 target_link_options(prebuild_stage2 PRIVATE

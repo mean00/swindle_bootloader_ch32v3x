@@ -184,15 +184,46 @@ void dfu_handle_data(const uint8_t *data, uint16_t len)
         else if (cmd == DFUSE_CMD_ERASE_PAGE)
         {
             lnDigitalWrite(LED_PIN, true);
-            // Erase the 256-byte page containing this address
-            if (!fmc_erase_page(addr & ~(FLASH_SECTOR_SIZE - 1)))
+            uint32_t erase_addr = addr & ~(DFU_SECTOR_SIZE - 1);
+
+            // 1. Check if the 4KB block is already erased
+            bool is_erased = true;
+            for (uint32_t a = erase_addr; a < erase_addr + DFU_SECTOR_SIZE; a += FLASH_SECTOR_SIZE)
             {
-                status = DFU_STATUS_ERR_ERASE;
-                state = STATE_DFU_ERROR;
+                if (!fmc_page_is_erased(a))
+                {
+                    is_erased = false;
+                    break;
+                }
+            }
+
+            if (is_erased)
+            {
+                status = DFU_STATUS_OK;
             }
             else
             {
-                status = DFU_STATUS_OK;
+                // 2. Not erased. Check if we can erase a 32KB block
+                bool erase_success = false;
+                if ((erase_addr % 32768) == 0)
+                {
+                    erase_success = fmc_erase_32k(erase_addr);
+                }
+                else
+                {
+                    // Fallback to exactly 4KB
+                    erase_success = fmc_erase_range(erase_addr, DFU_SECTOR_SIZE_KB);
+                }
+
+                if (!erase_success)
+                {
+                    status = DFU_STATUS_ERR_ERASE;
+                    state = STATE_DFU_ERROR;
+                }
+                else
+                {
+                    status = DFU_STATUS_OK;
+                }
             }
             lnDigitalWrite(LED_PIN, false);
         }

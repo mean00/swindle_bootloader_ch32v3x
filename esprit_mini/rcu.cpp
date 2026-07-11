@@ -46,6 +46,16 @@ uint32_t SystemCoreClock = 0;
 static uint32_t _rcuClockApb1 = 0;
 static uint32_t _rcuClockApb2 = 0;
 
+// stage 1 already did most of the job
+void lnInitSystemClock_limited()
+{
+    int inputClock = 8;
+    int multiplier = 144 / inputClock; // 18
+
+    SystemCoreClock = inputClock * multiplier * 1000000;
+    _rcuClockApb1 = SystemCoreClock; // APB1 = sysclk/1
+    _rcuClockApb2 = SystemCoreClock; // APB2 = sysclk/1
+}
 void lnInitSystemClock()
 {
     // Switch to IRC8 first
