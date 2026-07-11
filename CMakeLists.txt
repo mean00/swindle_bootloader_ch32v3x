@@ -76,21 +76,21 @@ set(STAGE2_SRCS
     ${COMMON_SRCS}
 )
 
-generate_firmware(stage2.elf ${STAGE2_SRCS})
+generate_firmware(prebuild_stage2 ${STAGE2_SRCS})
 
 # Custom linker script for stage2 (RAM)
-target_link_options(stage2.elf PRIVATE
+target_link_options(prebuild_stage2 PRIVATE
     "-T${CMAKE_SOURCE_DIR}/linker/stage2.ld"
     "-Wl,-Map,${CMAKE_BINARY_DIR}/stage2.map"
     ${LD_FLAGS_COMMON}
 )
 
-# Post-process: stage2.elf → stage2.bin → stage2_payload.h
+# Post-process: prebuild_stage2 → stage2.bin → stage2_payload.h
 set(STAGE2_BIN  ${CMAKE_BINARY_DIR}/stage2.bin)
 set(STAGE2_H    ${CMAKE_BINARY_DIR}/stage2_payload.h)
 
-add_custom_command(TARGET stage2.elf POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:stage2.elf> ${STAGE2_BIN}
+add_custom_command(TARGET prebuild_stage2 POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:prebuild_stage2> ${STAGE2_BIN}
     COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/bin2h.py ${STAGE2_BIN} > ${STAGE2_H}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     COMMENT "Generating stage2 binary and header"
@@ -107,28 +107,28 @@ set(STAGE1_SRCS
     ${RISCV_CH32_INC}/start.S
 )
 
-generate_firmware(stage1.elf ${STAGE1_SRCS})
-add_dependencies(stage1.elf stage2.elf)
+generate_firmware(swindle_ch32_bootloader ${STAGE1_SRCS})
+add_dependencies(swindle_ch32_bootloader prebuild_stage2)
 
 # Custom linker script: stage1 starts at flash address 0x00000000 (we ARE the bootloader)
 set(STAGE1_LD "${CMAKE_SOURCE_DIR}/linker/stage1.ld")
 
-target_include_directories(stage1.elf PRIVATE ${CMAKE_BINARY_DIR})
-target_link_options(stage1.elf PRIVATE
+target_include_directories(swindle_ch32_bootloader PRIVATE ${CMAKE_BINARY_DIR})
+target_link_options(swindle_ch32_bootloader PRIVATE
     "-T${STAGE1_LD}"
     "-Wl,-Map,${CMAKE_BINARY_DIR}/stage1.map"
     ${LD_FLAGS_COMMON}
 )
 
 # Fix startup — use our start.S, not the default one
-target_link_options(stage1.elf PRIVATE
+target_link_options(swindle_ch32_bootloader PRIVATE
     -Wl,-e,_start
 )
 
 # Post-process stage1
-add_custom_command(TARGET stage1.elf POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:stage1.elf> $<TARGET_FILE:stage1.elf>.bin
-    COMMAND ${CMAKE_SIZE} --format=berkeley $<TARGET_FILE:stage1.elf>
+add_custom_command(TARGET swindle_ch32_bootloader POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:swindle_ch32_bootloader> $<TARGET_FILE:swindle_ch32_bootloader>.bin
+    COMMAND ${CMAKE_SIZE} --format=berkeley $<TARGET_FILE:swindle_ch32_bootloader>
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     COMMENT "Generating stage1 binary and size summary"
 )

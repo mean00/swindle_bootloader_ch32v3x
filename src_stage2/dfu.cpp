@@ -250,15 +250,7 @@ void dfu_handle_data(const uint8_t *data, uint16_t len)
 
 // ========== Stage 2 entry ==========
 
-/**
- * @brief  Trigger a system reset using the ARM NVIC SYSRESETREQ mechanism.
- */
-static void system_reset(void)
-{
-    volatile uint32_t *aircr = (volatile uint32_t *)0xE000ED0C;
-    *aircr = (0x5FA << 16) | (1 << 2);
-    while (1) {} // wait for reset
-}
+extern void system_reset(void);
 /*
  *
  */

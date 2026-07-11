@@ -57,49 +57,49 @@ typedef volatile struct
 
 // STAT bits
 /** @brief Flash busy flag (traditional erase/program). */
-#define FMC_STAT_BUSY      (1 << 0)
+#define FMC_STAT_BUSY (1 << 0)
 /** @brief Write-cache busy flag (fast program). */
-#define FMC_STAT_WR_BUSY   (1 << 1)
+#define FMC_STAT_WR_BUSY (1 << 1)
 /** @brief Programming error flag. */
-#define FMC_STAT_PG_ERR    (1 << 3)
+#define FMC_STAT_PG_ERR (1 << 3)
 /** @brief Write-protect error flag. */
-#define FMC_STAT_WP_ERR    (1 << 4)
+#define FMC_STAT_WP_ERR (1 << 4)
 /** @brief End-of-operation flag. */
-#define FMC_STAT_WP_ENDF   (1 << 5)
+#define FMC_STAT_WP_ENDF (1 << 5)
 
 // CTL bits
 /** @brief Program (PG) enable bit. */
-#define FMC_CTL_PG         (1 << 0)
+#define FMC_CTL_PG (1 << 0)
 /** @brief Page erase (PER) enable bit. */
-#define FMC_CTL_PER        (1 << 1)
+#define FMC_CTL_PER (1 << 1)
 /** @brief Mass erase (MER) enable bit. */
-#define FMC_CTL_MER        (1 << 2)
+#define FMC_CTL_MER (1 << 2)
 /** @brief Option-byte program enable. */
-#define FMC_CTL_OBPG       (1 << 4)
+#define FMC_CTL_OBPG (1 << 4)
 /** @brief Option-byte erase enable. */
-#define FMC_CTL_OBER       (1 << 5)
+#define FMC_CTL_OBER (1 << 5)
 /** @brief Start operation bit. */
-#define FMC_CTL_START      (1 << 6)
+#define FMC_CTL_START (1 << 6)
 /** @brief Lock (LK) bit. */
-#define FMC_CTL_LK         (1 << 7)
+#define FMC_CTL_LK (1 << 7)
 /** @brief Option-byte write enable. */
-#define FMC_CTL_OBWEN      (1 << 9)
+#define FMC_CTL_OBWEN (1 << 9)
 /** @brief Error interrupt enable. */
-#define FMC_CTL_ERRIE      (1 << 10)
+#define FMC_CTL_ERRIE (1 << 10)
 /** @brief End-of-operation interrupt enable. */
-#define FMC_CTL_ENDIE      (1 << 12)
+#define FMC_CTL_ENDIE (1 << 12)
 
 // CH32-specific fast-mode bits
 /** @brief Fast unlock enable. */
-#define FMC_CTL_FASTUNLOCK  (1 << 15)
+#define FMC_CTL_FASTUNLOCK (1 << 15)
 /** @brief Fast program mode enable. */
 #define FMC_CTL_FASTPROGRAM (1 << 16)
 /** @brief Fast erase mode enable. */
-#define FMC_CTL_FASTERASE   (1 << 17)
+#define FMC_CTL_FASTERASE (1 << 17)
 /** @brief Fast start (commit) bit. */
-#define FMC_CTL_FASTSTART   (1 << 21)
+#define FMC_CTL_FASTSTART (1 << 21)
 /** @brief Extended (high) mode enable. */
-#define FMC_CTL_EHMOD      (1 << 24)
+#define FMC_CTL_EHMOD (1 << 24)
 
 /**
  * @brief  Wait until the FMC is no longer busy (traditional erase/program).
@@ -137,7 +137,7 @@ static void fmc_fast_unlock(void)
     if (FMC->CTL & FMC_CTL_FASTUNLOCK)
     {
         volatile uint32_t *chf = (uint32_t *)FMC_BASE;
-        chf[9] = 0x45670123;  // offset 0x24
+        chf[9] = 0x45670123; // offset 0x24
         chf[9] = 0xCDEF89AB;
     }
 }
@@ -146,21 +146,18 @@ static void fmc_fast_unlock(void)
  * @brief  Lock the flash controller (set the LOCK bit).
  */
 static void fmc_lock(void)
-{
-    FMC->CTL |= FMC_CTL_LK;
-}
+{ FMC->CTL |= FMC_CTL_LK; }
 
 /**
  * @brief  Disable interrupts globally via mstatus MIE bit.
  */
-class AutoNoInterrupt {
-public:
-    AutoNoInterrupt() {
-        __asm volatile("csrc mstatus, %0" : : "r"(1 << 3) : "memory");
-    }
-    ~AutoNoInterrupt() {
-        __asm volatile("csrs mstatus, %0" : : "r"(1 << 3) : "memory");
-    }
+class AutoNoInterrupt
+{
+  public:
+    AutoNoInterrupt()
+    { __asm volatile("csrc mstatus, %0" : : "r"(1 << 3) : "memory"); }
+    ~AutoNoInterrupt()
+    { __asm volatile("csrs mstatus, %0" : : "r"(1 << 3) : "memory"); }
 };
 
 /**
@@ -181,7 +178,7 @@ static bool fmc_erase_page(uint32_t addr)
     fmc_wait_busy();
 
     uint32_t stat = FMC->STAT;
-    FMC->STAT = FMC_STAT_WP_ENDF;    // clear end-of-operation
+    FMC->STAT = FMC_STAT_WP_ENDF; // clear end-of-operation
     FMC->CTL &= ~FMC_CTL_FASTERASE;
     FMC->CTL &= ~FMC_CTL_START;
 
@@ -224,25 +221,36 @@ static bool fmc_erase_range(uint32_t startAddress, int sizeInKBytes)
 static bool fmc_write_block(uint32_t addr, const uint8_t *data)
 {
     uint32_t fmc_addr = addr + 0x08000000;
-
+    volatile uint32_t *prog = (volatile uint32_t *)fmc_addr;
     AutoNoInterrupt noInt;
-    fmc_fast_unlock();
 
     FMC->CTL |= FMC_CTL_FASTPROGRAM;
     fmc_wait_busy();
     fmc_wait_wr_busy();
 
     // Write 64 words (256 bytes) into the write cache
-    for (int i = 0; i < 64; i++)
+    if ((((uint32_t)data) & 3) == 0) // aligned
     {
-        uint32_t w = data[0] | ((uint32_t)data[1] << 8)
-                   | ((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 24);
-        *(volatile uint32_t *)fmc_addr = w;
-        data += 4;
-        fmc_addr += 4;
-        fmc_wait_wr_busy();
+        volatile uint32_t *rd = (volatile uint32_t *)data;
+        for (int i = 0; i < 64; i++)
+        {
+            *prog = *rd;
+            prog++;
+            rd++;
+            fmc_wait_wr_busy();
+        }
     }
-
+    else // unaligned
+    {
+        for (int i = 0; i < 64; i++)
+        {
+            uint32_t w = data[0] | ((uint32_t)data[1] << 8) | ((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 24);
+            *prog = w;
+            prog++;
+            data += 4;
+            fmc_wait_wr_busy();
+        }
+    }
     // Commit the cache
     FMC->CTL |= FMC_CTL_FASTSTART;
     fmc_wait_busy();
@@ -273,6 +281,7 @@ static bool fmc_write_block(uint32_t addr, const uint8_t *data)
  */
 static bool fmc_write(uint32_t startAddress, const uint8_t *data, int sizeInBytes)
 {
+    fmc_fast_unlock();
     while (sizeInBytes > 0)
     {
         if (!fmc_write_block(startAddress, data))
