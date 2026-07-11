@@ -19,7 +19,7 @@ include(${CMAKE_SOURCE_DIR}/platformConfig.cmake)
 # ---- Toolchain setup ----
 option(USE_CLANG "Use Clang instead of GCC" OFF)
 
-#set(USE_CLANG True)
+set(USE_CLANG True)
 
 if(USE_CLANG)
   include(${CMAKE_SOURCE_DIR}/toolchain_clang.cmake)

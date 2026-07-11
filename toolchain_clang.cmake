@@ -28,12 +28,12 @@ set(CMAKE_OBJCOPY       ${PLATFORM_CLANG_PATH}/llvm-objcopy${TOOLCHAIN_SUFFIX}  
 # dont try to create a shared lib, it will not work
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY                                                    CACHE INTERNAL "")
 
-set(GD32_SPECS  "--specs=picolibc.specs" CACHE INTERNAL "" FORCE)
+set(GD32_SPECS  "" CACHE INTERNAL "" FORCE ) #--specs=picolibc.specs" CACHE INTERNAL "" FORCE)
 set(GD32_DEBUG_FLAGS "-g3 -gdwarf-2 -Oz" CACHE INTERNAL "")
 
 # Architecture and MCU specific flags
 set(GD32_MCU_C_FLAGS "--sysroot ${PLATFORM_CLANG_SYSROOT} ${PLATFORM_CLANG_C_FLAGS} -DLN_MCU=LN_MCU_CH32V3x -DLN_ARCH=LN_ARCH_RISCV" CACHE INTERNAL "")
-set(GD32_C_FLAGS    "${GD32_SPECS} ${GD32_MCU_C_FLAGS} ${GD32_DEBUG_FLAGS} -Werror=return-type -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common" CACHE INTERNAL "")
+set(GD32_C_FLAGS    "${GD32_MCU_C_FLAGS} ${GD32_DEBUG_FLAGS} -Werror=return-type -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common" CACHE INTERNAL "")
 
 set(CMAKE_C_FLAGS   "${GD32_C_FLAGS}" CACHE INTERNAL "")
 set(CMAKE_ASM_FLAGS "${GD32_C_FLAGS}" CACHE INTERNAL "")
@@ -57,6 +57,6 @@ set(LD_FLAGS_COMMON
 )
 
 macro(generate_firmware TARGET_NAME)
-    add_executable(${TARGET_NAME} ${ARGN})
-    target_link_options(${TARGET_NAME} PRIVATE -lc)
+  add_executable(${TARGET_NAME} ${ARGN})
+  target_link_options(${TARGET_NAME} PRIVATE -lc)
 endmacro()
