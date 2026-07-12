@@ -31,13 +31,14 @@ extern "C" uint32_t ch32_crc(uint32_t addr, uint32_t len_in_u32);
 
 /** @brief RAM marker pointer used to signal reboot-into-DFU. */
 static uint64_t *marker = (uint64_t *)RAM_START_ADDR;
+#define BOOT_TO_DFU_MARKER 0xDEADBEEFCC00FFEEULL
 
 /**
  * @brief  Write the reboot-into-DFU magic value into the RAM marker.
  * @note   The next boot will see the marker and enter DFU mode.
  */
 static void reboot_into_bootloader()
-{ *marker = 0xDEADBEEFCC00FFEEULL; }
+{ *marker = BOOT_TO_DFU_MARKER; }
 
 /**
  * @brief  Clear the reboot marker so a normal boot proceeds.
@@ -50,7 +51,7 @@ static void clear_reboot_flags()
  * @return true if the magic marker is present, false otherwise.
  */
 static bool rebooted_into_dfu()
-{ return (*marker == 0xDEADBEEFCC00FFEEULL); }
+{ return (*marker == BOOT_TO_DFU_MARKER); }
 
 /**
  * @brief  Chain (jump) execution to an arbitrary address in RISC-V.
