@@ -303,8 +303,7 @@ void usb_init(void)
 
     // Reset the USB MAC/PHY
     USB->BASE_CTRL = USBFS_CTRL_CLR_ALL | USBFS_CTRL_RESET_SIE;
-    for (volatile int i = 0; i < 30000; i++)
-        __asm__("nop");
+    lnDelay(30);
     USB->BASE_CTRL = 0;
 
     // Initialize registers
